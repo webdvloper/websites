@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NEON PONG 3D — настольный теннис</title>
+<style>
+:root{--c1:#00f0ff;--c2:#ff2fd6;--c3:#fff200;--tx:#e8f4ff;--bg:#07021a;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",Roboto,system-ui,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.btn{border:2px solid var(--c1);background:rgba(0,0,0,.25);color:var(--c1);padding:12px 22px;border-radius:12px;font:700 14px inherit;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 12px var(--c1),inset 0 0 12px rgba(0,255,255,.12);transition:.2s}
+.btn:hover,.btn.on{background:var(--c1);color:#05010f}
+.btn.m{border-color:var(--c2);color:var(--c2);box-shadow:0 0 12px var(--c2)}.btn.m:hover{background:var(--c2);color:#05010f}
+.btn.sm{padding:8px 14px;font-size:12px}
+#hud{position:fixed;inset:0 0 auto 0;display:flex;justify-content:center;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 0;pointer-events:none}
+#sb{display:flex;align-items:center;gap:14px;padding:6px 20px;border:2px solid var(--c1);border-radius:16px;background:rgba(5,2,20,.6);box-shadow:0 0 18px var(--c1)}
+#sb b{font-size:clamp(28px,6vw,48px);color:var(--c3);text-shadow:0 0 14px var(--c3)}#sb small{color:var(--c2);font-weight:700;letter-spacing:.15em}#sb span{font-size:30px;color:var(--c1)}
+#pz{position:absolute;right:12px;top:calc(10px + env(safe-area-inset-top,0px));pointer-events:auto}
+#msg{position:fixed;left:0;right:0;top:36%;text-align:center;font-size:clamp(30px,8vw,80px);font-weight:900;color:var(--c3);text-shadow:0 0 20px var(--c2),0 0 40px var(--c2);opacity:0;transition:opacity .25s;pointer-events:none}#msg.on{opacity:1}
+#hint{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:var(--c1);text-shadow:0 0 8px var(--c1);font-size:14px;letter-spacing:.08em;pointer-events:none;padding:0 10px}
+#menu{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;gap:16px;overflow:auto;background:rgba(5,2,20,.86);backdrop-filter:blur(6px);padding:calc(16px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px))}
+.logo{margin:6px 0 0;font-size:clamp(34px,9vw,92px);font-weight:900;letter-spacing:.08em;text-align:center;background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px var(--c2))}
+.sub{margin:0;color:var(--c1);letter-spacing:.3em;font-size:clamp(11px,2.4vw,16px);text-align:center;text-transform:uppercase}
+nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+main{width:100%;max-width:1000px}
+.tab{display:none;animation:in .3s}.tab.on{display:block}@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{border:1px solid var(--c2);border-radius:16px;padding:18px;background:rgba(20,8,50,.62);box-shadow:0 0 18px rgba(255,47,214,.22)}
+.card h3{margin:0 0 10px;color:var(--c1);text-shadow:0 0 10px var(--c1);font-size:18px}
+.card p,.card li{line-height:1.55;font-size:15px;margin:6px 0}.card ul{padding-left:20px;margin:0}
+.hero{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:9px 0;font-size:15px}
+select,input[type=range]{accent-color:var(--c2)}
+select{background:#12062e;color:var(--tx);border:1px solid var(--c1);border-radius:8px;padding:6px 10px}
+input[type=color]{width:46px;height:30px;border:2px solid var(--c1);border-radius:8px;background:none;padding:0;cursor:pointer}
+.pre{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
+#res{font-size:22px;font-weight:800;color:var(--c3);text-shadow:0 0 12px var(--c3)}
+footer{color:#8c82b3;font-size:12px;text-align:center;margin-top:auto}
+@media(max-width:560px){.btn{padding:10px 14px;font-size:12px}#sb{gap:8px;padding:4px 12px}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud" hidden><div id="sb"><small>ВЫ</small><b id="sp">0</b><span>:</span><b id="sa">0</b><small>ИИ</small></div><button id="pz" class="btn sm">❚❚ Меню</button></div>
+<div id="msg"></div><div id="hint"></div>
+
+<div id="menu">
+<h1 class="logo">NEON PONG 3D</h1>
+<p class="sub">Офлайн-турнир по настольному теннису · вид от первого лица</p>
+<nav>
+<button class="btn on" data-t="play">Играть</button><button class="btn" data-t="about">Описание и правила</button><button class="btn" data-t="set">Настройки</button><button class="btn" data-t="col">Цвета</button>
+</nav>
+<main>
+<section class="tab on" id="play"><div class="card hero">
+<div id="res"></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center"><button class="btn" id="go">▶ Новая игра</button><button class="btn m" id="resume" hidden>Продолжить</button></div>
+<p id="stat"></p>
+<p>Двигайте мышь: влево-вправо — ракетка по столу, вверх — вперёд и сильнее удар. Клик — подача. Esc или P — пауза.</p>
+</div></section>
+
+<section class="tab" id="about"><div class="grid">
+<div class="card"><h3>О игре</h3><p>Полностью офлайновая 3D-игра: стол расположен вертикально, камера смотрит вам в глаза-ракетке. Соперник — ИИ с четырьмя уровнями мастерства. Графика построена на собственном 3D-движке с перспективной проекцией, физикой мяча, тенью, следом и искрами.</p></div>
+<div class="card"><h3>Управление</h3><ul><li>Мышь (или палец) — перемещение ракетки</li><li>Мышь вверх/вниз — глубина и сила удара</li><li>Клик/тап или пробел — подача</li><li>Esc / P — пауза и меню</li><li>Удар по краю ракетки меняет угол полёта</li></ul></div>
+<div class="card"><h3>Официальные правила</h3><ul><li>Стол 2,74 × 1,525 м, высота 76 см</li><li>Сетка высотой 15,25 см</li><li>Мяч: диаметр 40 мм, масса 2,7 г</li><li>Партия — до 11 очков с разницей в 2</li><li>Подача меняется каждые 2 очка; при 10:10 — после каждого</li><li>При подаче мяч отскакивает сначала на вашей половине, затем на половине соперника</li></ul></div>
+<div class="card"><h3>Когда теряется очко</h3><ul><li>Мяч не попал на половину соперника или ушёл в аут</li><li>Мяч задел сетку и вернулся к вам</li><li>Мяч дважды отскочил на вашей половине</li><li>Вы не успели отбить мяч</li></ul></div>
+<div class="card"><h3>Советы</h3><ul><li>Бейте в углы — ИИ дольше добегает</li><li>Меняйте глубину: короткий мяч сменяйте длинным</li><li>Следите за тенью мяча: она показывает точку отскока</li><li>Не спешите — сначала дождитесь отскока на вашей половине</li></ul></div>
+<div class="card"><h3>История и факты</h3><ul><li>Игра появилась в Англии в 1880-х как салонное развлечение</li><li>Международная федерация ITTF основана в 1926 году</li><li>Олимпийский вид спорта с 1988 года</li><li>Топ-игроки отправляют мяч со скоростью свыше 100 км/ч</li></ul></div>
+</div></section>
+
+<section class="tab" id="set"><div class="card" style="max-width:560px;margin:auto">
+<h3>Параметры игры</h3>
+<div class="row">Сложность ИИ<select id="diff"><option value="0">Новичок</option><option value="1">Любитель</option><option value="2">Профи</option><option value="3">Мастер</option></select></div>
+<div class="row">Играть до<select id="win"><option>7</option><option>11</option><option>21</option></select></div>
+<div class="row">Чувствительность мыши<input type="range" id="sens" min=".6" max="1.4" step=".05"></div>
+<div class="row">Звук<input type="checkbox" id="snd"></div>
+<div class="row">Эффекты (след, искры)<input type="checkbox" id="eff"></div>
+</div></section>
+
+<section class="tab" id="col"><div class="pre" id="pre"></div><div class="grid" id="cg"></div></section>
+</main>
+<footer>NEON PONG 3D · один HTML-файл · работает без интернета</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),R=Math.random;
+const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`};
+const cv=$('#c'),ctx=cv.getContext('2d');
+const DEF={ball:'#ffee00',pad:'#ff2fd6',ai:'#17f4ff',handle:'#ffb347',top:'#0a2a6b',edge:'#00e5ff',mid:'#ffffff',net:'#b6ff3b',legs:'#7a5cff',bg1:'#07021a',bg2:'#1b0638',grid:'#ff2fd6',fx:'#00ffa8',c1:'#00f0ff',c2:'#ff2fd6',c3:'#fff200',tx:'#e8f4ff'};
+const GROUPS=[['Игровые объекты',[['ball','Мяч'],['pad','Ваша ракетка'],['ai','Ракетка ИИ'],['handle','Рукоятки ракеток']]],
+['Элементы стола',[['top','Игровая поверхность'],['edge','Контур и края стола'],['mid','Разметка'],['net','Сетка'],['legs','Ножки и боковины']]],
+['Общие элементы',[['bg1','Фон: верх'],['bg2','Фон: низ'],['grid','Неоновая сетка пола'],['fx','След мяча и искры']]],
+['Интерфейс',[['c1','Основной неон'],['c2','Дополнительный неон'],['c3','Акцент счёта'],['tx','Цвет текста']]]];
+const PRESETS={'Неон':{},
+'Киберпанк':{ball:'#faff00',pad:'#ff003c',ai:'#00f0ff',top:'#1a0b3a',edge:'#ff00aa',net:'#00ffd5',legs:'#ff6a00',bg1:'#0d0221',bg2:'#3a0a4a',grid:'#00f0ff',fx:'#ff00aa',c1:'#ff00aa',c2:'#00f0ff',c3:'#faff00'},
+'Классика':{ball:'#ffffff',pad:'#d62828',ai:'#222222',top:'#0b3d91',edge:'#ffffff',net:'#e6e6e6',legs:'#333333',bg1:'#10151c',bg2:'#222b38',grid:'#4a5a70',fx:'#ffffff',c1:'#4fc3f7',c2:'#ffb74d',c3:'#ffffff'},
+'Лёд':{ball:'#ffffff',pad:'#7df9ff',ai:'#b388ff',top:'#0b3a5c',edge:'#aaeeff',net:'#ffffff',legs:'#5f7a99',bg1:'#02101f',bg2:'#08334f',grid:'#4fd8ff',fx:'#c7f9ff',c1:'#7df9ff',c2:'#b388ff',c3:'#ffffff'}};
+const DIFFS=[{sp:1.5,err:.2,reach:.14},{sp:2.4,err:.1,reach:.16},{sp:3.4,err:.05,reach:.18},{sp:4.6,err:.02,reach:.2}];
+let S={diff:1,win:11,sens:1,snd:true,eff:true,w:0,l:0,col:{...DEF}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('np3d')||'{}'))}catch(e){}
+S.col={...DEF,...S.col};
+const save=()=>{try{localStorage.setItem('np3d',JSON.stringify(S))}catch(e){}};
+function applyUI(){const r=document.documentElement.style,c=S.col;r.setProperty('--c1',c.c1);r.setProperty('--c2',c.c2);r.setProperty('--c3',c.c3);r.setProperty('--tx',c.tx);r.setProperty('--bg',c.bg1)}
+
+/* ---------- Звук ---------- */
+let AC;function sfx(f,d=.08,t='square',v=.05){if(!S.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(1e-4,AC.currentTime+d);o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+
+/* ---------- 3D-проекция ---------- */
+const TW=.7625,TL=1.37,TH=.76,AIZ=-1.5,CA=.2,SA=Math.sin(CA),CO=Math.cos(CA),cam={x:0,y:.62,z:2.25};
+let W,H,F;
+function resize(){const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);F=Math.min(H*.95,W*.9)}
+function P(x,y,z){const dx=x-cam.x,dy=y-cam.y,dz=z-cam.z,d=-dy*SA-dz*CO;if(d<.05)return null;return[W/2+dx*F/d,H*.45-(dy*CO-dz*SA)*F/d,d]}
+function poly(pts,fill,stroke,lw,glow){const q=pts.map(p=>P(...p));if(q.some(a=>!a))return;ctx.beginPath();q.forEach((a,i)=>i?ctx.lineTo(a[0],a[1]):ctx.moveTo(a[0],a[1]));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.shadowColor=stroke;ctx.shadowBlur=glow||0;ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.stroke();ctx.shadowBlur=0}}
+function seg(a,b,c,d,e,f){const p=P(a,b,c),q=P(d,e,f);if(p&&q){ctx.moveTo(p[0],p[1]);ctx.lineTo(q[0],q[1])}}
+
+/* ---------- Состояние игры ---------- */
+const G={st:'menu',paused:true,pp:0,ap:0,srv:0,timer:0,over:false,mx:0,my:.5,pad:{x:0,z:1.55,vx:0},ai:{x:0,err:0},parts:[],
+ball:{x:0,y:.42,z:1.5,vx:0,vy:0,vz:0,h:1,need:'opp',trail:[]}};
+const serverFor=t=>{const k=S.win-1;return(t<2*k?Math.floor(t/2):t-k)%2};
+function msg(t){const m=$('#msg');m.textContent=t;m.classList.add('on');clearTimeout(msg.t);msg.t=setTimeout(()=>m.classList.remove('on'),1300)}
+function score(){$('#sp').textContent=G.pp;$('#sa').textContent=G.ap}
+function burst(x,y,z,n){if(!S.eff)return;for(let i=0;i<n;i++)G.parts.push({x,y,z,vx:(R()-.5)*2,vy:R()*1.6,vz:(R()-.5)*2,l:1})}
+function newGame(){G.pp=G.ap=0;G.over=false;score();$('#res').textContent='';setServe();menuShow(false)}
+function setServe(){G.srv=serverFor(G.pp+G.ap);G.st='serve';G.timer=1.1;const b=G.ball;b.vx=b.vy=b.vz=0;b.trail=[];b.h=G.srv?-1:1}
+function serveBall(h){const b=G.ball;b.h=h;b.need='own';b.vy=0;b.vz=-2.6*h;b.vx=h>0?clamp(G.pad.vx*.2,-.25,.25):(R()-.5)*.5;b.trail=[];G.st='rally';sfx(500,.07)}
+function point(side){if(G.st!='rally')return;G.st='point';side>0?G.pp++:G.ap++;G.timer=1.5;sfx(side>0?880:180,.3,'sawtooth');msg(side>0?'ОЧКО ВАМ!':'ОЧКО ИИ');score();
+const a=G.pp,b=G.ap;G.over=(a>=S.win||b>=S.win)&&Math.abs(a-b)>=2}
+function endGame(){const win=G.pp>G.ap;win?S.w++:S.l++;save();$('#res').textContent=(win?'ПОБЕДА! ':'ПОРАЖЕНИЕ. ')+G.pp+' : '+G.ap;G.st='over';sfx(win?1000:150,.6,'triangle');menuShow(true)}
+function tableHit(s){const b=G.ball;sfx(300,.06,'sine');burst(b.x,.02,b.z,6);if(G.st!='rally')return;
+if(b.need=='own'){s==b.h?b.need='opp':point(-b.h)}else if(b.need=='opp'){s==-b.h?b.need='done':point(-b.h)}else point(s==-b.h?b.h:-b.h)}
+function stepBall(dt){const b=G.ball,pz=b.z;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;b.vy-=9.8*dt;
+if((pz>0)!=(b.z>0)&&b.y<.1725&&b.y>0&&Math.abs(b.x)<.915){b.z=pz;b.vz*=-.25;b.vx*=.5;sfx(150,.05,'triangle');burst(b.x,b.y,0,5)}
+if(b.vy<0&&b.y<=.02&&b.y>-.05&&Math.abs(b.x)<=TW&&Math.abs(b.z)<=TL){b.y=.02;b.vy*=-.9;b.vx*=.985;b.vz*=.985;tableHit(b.z>0?1:-1)}
+if(b.y<-.8||Math.abs(b.z)>3.2||Math.abs(b.x)>4)if(G.st=='rally')point(b.need=='done'?b.h:-b.h)}
+function launch(h,tx,tz,T){const b=G.ball;b.vx=(tx-b.x)/T;b.vz=(tz-b.z)/T;b.vy=(4.9*T*T+.02-b.y)/T;b.h=h;b.need='opp';sfx(h>0?700:560,.07);burst(b.x,b.y,b.z,10)}
+function update(dt){
+const p=G.pad,b=G.ball,ai=G.ai,D=DIFFS[S.diff];
+if(dt>0){const ox=p.x;p.x+=(clamp(G.mx*S.sens*.95,-.9,.9)-p.x)*Math.min(1,dt*20);p.vx+=((p.x-ox)/dt-p.vx)*.4;p.z+=(1.55-.65*G.my-p.z)*Math.min(1,dt*15)}
+cam.x+=(p.x*.7-cam.x)*Math.min(1,dt*8);
+for(const q of G.parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;q.vy-=6*dt;q.l-=dt*2.2}G.parts=G.parts.filter(q=>q.l>0);
+if(S.eff&&G.st!='serve'){b.trail.push({x:b.x,y:b.y,z:b.z});if(b.trail.length>14)b.trail.shift()}
+if(G.st=='serve'){if(G.srv==0){b.x=clamp(p.x,-.45,.45);b.y=.42;b.z=1.5;ai.x+=(0-ai.x)*Math.min(1,dt*3)}else{ai.x+=(R()<.02?(R()-.5)*.3:0);b.x=clamp(ai.x,-.45,.45);b.y=.45;b.z=AIZ+.05;G.timer-=dt;if(G.timer<0)serveBall(-1)}}
+else if(G.st=='rally'||G.st=='point'){
+ for(let i=0;i<3;i++)stepBall(dt/3);
+ if(G.st=='rally'){
+  if(b.need=='done'&&b.h==-1&&b.vz>0&&Math.abs(b.z-p.z)<.14&&Math.abs(b.x-p.x)<.17&&b.y>0&&b.y<.7){
+   const ny=G.my,tz=-(.35+.85*ny),tx=clamp((b.x-p.x)*5+p.vx*.3,-.62,.62);launch(1,tx,tz,Math.max(.5,(b.z-tz)/(3.4+ny*1.2)));ai.err=(R()*2-1)*D.err}
+  else if(b.need=='done'&&b.h==1&&b.vz<0&&Math.abs(b.z-AIZ)<.16&&Math.abs(b.x-ai.x)<D.reach&&b.y>0&&b.y<.7){
+   let tx=R()<.4+.12*S.diff?-Math.sign(p.x||1)*(.3+R()*.3):(R()-.5)*1.2;tx=clamp(tx,-.62,.62);const tz=.35+R()*.8;
+   launch(-1,tx,tz,Math.max(.5,(tz-b.z)/(3.2+S.diff*.7)))}
+  let t=0;if(b.h==1&&b.vz<0)t=clamp(b.x+b.vx*(AIZ-b.z)/b.vz+ai.err,-.9,.9);
+  ai.x+=clamp(t-ai.x,-D.sp*dt,D.sp*dt)}
+ else{G.timer-=dt;if(G.timer<0)G.over?endGame():setServe()}}
+const h=$('#hint');h.textContent=G.st=='serve'?(G.srv==0?'Ваша подача: кликните или нажмите пробел':'Подаёт ИИ — приготовьтесь'):(G.st=='rally'?'Мышь влево-вправо — ракетка, вверх — вперёд и сильнее':'')}
+
+/* ---------- Отрисовка ---------- */
+function drawNet(){const c=S.col,N=.915,h=.1525;ctx.lineWidth=1;ctx.strokeStyle=rgba(c.net,.45);ctx.beginPath();for(let x=-N;x<=N+.001;x+=.05)seg(x,0,0,x,h,0);for(let y=0;y<=h+.001;y+=.025)seg(-N,y,0,N,y,0);ctx.stroke();
+ctx.strokeStyle=c.net;ctx.lineWidth=3;ctx.shadowColor=c.net;ctx.shadowBlur=12;ctx.beginPath();seg(-N,h,0,N,h,0);seg(-N,0,0,-N,h,0);seg(N,0,0,N,h,0);ctx.stroke();ctx.shadowBlur=0}
+function drawPad(x,y,z,col){const c=S.col,r=.14,pts=[];for(let i=0;i<28;i++){const a=i/28*6.2832;pts.push([x+Math.cos(a)*r,y+Math.sin(a)*r*1.05,z])}
+poly([[x-.022,y-r+.01,z],[x+.022,y-r+.01,z],[x+.02,y-r-.13,z],[x-.02,y-r-.13,z]],c.handle);
+poly(pts,rgba(col,.8),col,3,18);poly(pts.map(a=>[x+(a[0]-x)*.7,y+(a[1]-y)*.7,z]),null,rgba('#ffffff',.35),1.5)}
+function drawBall(){const b=G.ball,c=S.col;
+if(S.eff)b.trail.forEach((t,i,a)=>{const q=P(t.x,t.y,t.z);if(q){ctx.fillStyle=rgba(c.fx,i/a.length*.5);ctx.beginPath();ctx.arc(q[0],q[1],Math.max(1,.034*F/q[2]*i/a.length),0,6.3);ctx.fill()}});
+const q=P(b.x,b.y,b.z);if(!q)return;const r=Math.max(3,.036*F/q[2]);
+ctx.shadowColor=c.ball;ctx.shadowBlur=24;ctx.fillStyle=c.ball;ctx.beginPath();ctx.arc(q[0],q[1],r,0,6.3);ctx.fill();ctx.shadowBlur=0;
+ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.arc(q[0]-r*.3,q[1]-r*.3,r*.3,0,6.3);ctx.fill()}
+function render(){
+const c=S.col,b=G.ball,X=TW,Z=TL,g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,c.bg1);g.addColorStop(1,c.bg2);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ctx.strokeStyle=rgba(c.grid,.35);ctx.lineWidth=1;ctx.beginPath();
+for(let z=-8;z<=2;z+=.5)seg(-6,-TH,z,6,-TH,z);for(let x=-6;x<=6;x+=.5)seg(x,-TH,-8,x,-TH,2);ctx.stroke();
+ctx.lineCap='round';ctx.strokeStyle=c.legs;
+[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,d])=>{const t=P(a*.62,-.04,d*1.15),u=P(a*.62,-TH,d*1.15);if(t&&u){ctx.lineWidth=Math.max(2,.05*F/t[2]);ctx.beginPath();ctx.moveTo(t[0],t[1]);ctx.lineTo(u[0],u[1]);ctx.stroke()}});
+poly([[-X,0,Z],[X,0,Z],[X,-.05,Z],[-X,-.05,Z]],c.legs);poly([[-X,0,-Z],[-X,0,Z],[-X,-.05,Z],[-X,-.05,-Z]],c.legs);poly([[X,0,-Z],[X,0,Z],[X,-.05,Z],[X,-.05,-Z]],c.legs);
+poly([[-X,0,-Z],[X,0,-Z],[X,0,Z],[-X,0,Z]],c.top,c.edge,2.5,18);
+const m=rgba(c.mid,.55);poly([[-X+.02,0,-Z+.02],[X-.02,0,-Z+.02],[X-.02,0,Z-.02],[-X+.02,0,Z-.02]],null,m,1);
+ctx.strokeStyle=m;ctx.lineWidth=1;ctx.beginPath();seg(0,0,-Z,0,0,Z);ctx.stroke();
+const q=P(b.x,0,b.z);if(q&&Math.abs(b.x)<=X&&Math.abs(b.z)<=Z){const r=.04*F/q[2];ctx.fillStyle='rgba(0,0,0,.45)';ctx.beginPath();ctx.ellipse(q[0],q[1],r*(1+b.y),r*.45*(1+b.y),0,0,6.3);ctx.fill()}
+[[AIZ,()=>drawPad(G.ai.x,.22,AIZ,c.ai)],[0,drawNet],[b.z,drawBall],[G.pad.z,()=>drawPad(G.pad.x,.22,G.pad.z,c.pad)]].sort((a,d)=>a[0]-d[0]).forEach(o=>o[1]());
+for(const p of G.parts){const s=P(p.x,p.y,p.z);if(s){ctx.fillStyle=rgba(c.fx,p.l);ctx.beginPath();ctx.arc(s[0],s[1],Math.max(1,.012*F/s[2]),0,6.3);ctx.fill()}}}
+
+/* ---------- Меню и ввод ---------- */
+function menuShow(v){$('#menu').hidden=!v;$('#hud').hidden=v||G.st=='menu';G.paused=v;cv.style.cursor=v?'default':'none';
+$('#resume').hidden=!(v&&['serve','rally','point'].includes(G.st));$('#stat').textContent='Побед: '+S.w+' · Поражений: '+S.l;$('#hint').hidden=v}
+function tab(id){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id==id));document.querySelectorAll('nav .btn').forEach(e=>e.classList.toggle('on',e.dataset.t==id))}
+document.querySelectorAll('nav .btn').forEach(e=>e.onclick=()=>tab(e.dataset.t));
+$('#go').onclick=newGame;$('#resume').onclick=()=>menuShow(false);$('#pz').onclick=()=>{tab('play');menuShow(true)};
+function mv(e){G.mx=e.clientX/W*2-1;G.my=clamp(1.25*(1-e.clientY/H)-.1,0,1)}
+cv.addEventListener('pointermove',mv);
+cv.addEventListener('pointerdown',e=>{mv(e);if(!G.paused&&G.st=='serve'&&G.srv==0)serveBall(1)});
+addEventListener('keydown',e=>{if(e.code=='Space'&&!G.paused&&G.st=='serve'&&G.srv==0){e.preventDefault();serveBall(1)}
+if((e.code=='Escape'||e.code=='KeyP')&&G.st!='menu'&&G.st!='over'){tab('play');menuShow(!G.paused)}});
+/* настройки */
+const bind=(id,k,num,chk)=>{const el=$('#'+id);chk?el.checked=S[k]:el.value=S[k];el.oninput=()=>{S[k]=chk?el.checked:num?+el.value:el.value;save()}};
+bind('diff','diff',1);bind('win','win',1);bind('sens','sens',1);bind('snd','snd',0,1);bind('eff','eff',0,1);
+function buildColors(){$('#pre').innerHTML='';for(const n in PRESETS){const bt=document.createElement('button');bt.className='btn sm m';bt.textContent=n;bt.onclick=()=>{S.col={...DEF,...PRESETS[n]};save();applyUI();buildColors()};$('#pre').append(bt)}
+const cg=$('#cg');cg.innerHTML='';GROUPS.forEach(([t,items])=>{const d=document.createElement('div');d.className='card';d.innerHTML='<h3>'+t+'</h3>';items.forEach(([k,l])=>{const r=document.createElement('label');r.className='row';r.textContent=l;const i=document.createElement('input');i.type='color';i.value=S.col[k];i.oninput=()=>{S.col[k]=i.value;applyUI();save()};r.append(i);d.append(r)});cg.append(d)})}
+buildColors();applyUI();resize();addEventListener('resize',resize);
+let last=0;function frame(t){requestAnimationFrame(frame);const dt=Math.min((t-last)/1000||0,.033);last=t;if(!G.paused)update(dt);else if(G.st=='menu'){G.pad.x=Math.sin(t/900)*.4;cam.x=G.pad.x*.7}render()}
+menuShow(true);requestAnimationFrame(frame);
+</script>
+</body>
+</html>

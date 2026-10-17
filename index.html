@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Портал сайтов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #05050f;
+            color: #e0e0ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Радужный анимированный фон */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                from 0deg,
+                #ff0000, #ff8800, #ffff00, #00ff00,
+                #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000
+            );
+            z-index: -2;
+            opacity: 0.12;
+            animation: rainbowRotate 20s linear infinite;
+            filter: blur(60px);
+        }
+
+        @keyframes rainbowRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Второй радужный слой */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(255, 0, 100, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 255, 200, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(150, 0, 255, 0.12) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% { opacity: 0.6; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Слой с частицами */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(105vh) translateX(0) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(50vh) translateX(30px) scale(1);
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-10vh) translateX(-20px) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        /* Мерцающие частицы */
+        .particle.twinkle {
+            animation: floatUp linear infinite, twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(2.5); }
+        }
+
+        /* Вращающиеся частицы */
+        .particle.spin {
+            animation: floatUp linear infinite, spinParticle 4s linear infinite;
+        }
+
+        @keyframes spinParticle {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(8, 8, 22, 0.82);
+            padding: 50px 40px;
+            border-radius: 24px;
+            max-width: 620px;
+            width: 100%;
+            position: relative;
+            backdrop-filter: blur(20px);
+            z-index: 1;
+            animation: containerAppear 0.8s ease-out;
+        }
+
+        @keyframes containerAppear {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Радужная вращающаяся неоновая рамка */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 27px;
+            background: conic-gradient(
+                from 0deg,
+                #ff0000, #ff8800, #ffff00, #00ff00,
+                #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000
+            );
+            z-index: -1;
+            animation: rainbowRotate 4s linear infinite;
+            filter: blur(10px);
+            opacity: 0.7;
+        }
+
+        /* Внутренняя радужная рамка */
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 25px;
+            background: conic-gradient(
+                from 180deg,
+                #ff0000, #ff8800, #ffff00, #00ff00,
+                #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000
+            );
+            z-index: -1;
+            animation: rainbowRotate 6s linear infinite reverse;
+            filter: blur(4px);
+            opacity: 0.4;
+        }
+
+        h1 {
+            margin-bottom: 12px;
+            font-size: 2.6em;
+            font-weight: 800;
+            background: linear-gradient(
+                90deg,
+                #ff0000, #ff8800, #ffff00, #00ff00,
+                #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000
+            );
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowText 5s linear infinite;
+            letter-spacing: 1px;
+            filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.4));
+        }
+
+        @keyframes rainbowText {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 400% 50%; }
+        }
+
+        p {
+            color: #9999cc;
+            margin-bottom: 36px;
+            font-size: 1.05em;
+            letter-spacing: 0.5px;
+        }
+
+        .links-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        /* Радужные кнопки */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 16px;
+            background: rgba(15, 15, 35, 0.85);
+            color: #d0d0ff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95em;
+            border: 2px solid;
+            border-image: linear-gradient(
+                90deg,
+                #ff0000, #ff8800, #ffff00, #00ff00,
+                #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000
+            ) 1;
+            border-image-slice: 1;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            text-align: center;
+            animation: btnRainbowBorder 6s linear infinite;
+        }
+
+        @keyframes btnRainbowBorder {
+            0% { border-image-source: linear-gradient(0deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000); }
+            25% { border-image-source: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000); }
+            50% { border-image-source: linear-gradient(180deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000); }
+            75% { border-image-source: linear-gradient(270deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000); }
+            100% { border-image-source: linear-gradient(360deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000); }
+        }
+
+        /* Радужный блик на кнопке */
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 0, 100, 0.1),
+                rgba(0, 255, 200, 0.1),
+                rgba(150, 0, 255, 0.1),
+                transparent
+            );
+            transition: left 0.6s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: rgba(25, 25, 55, 0.95);
+            transform: translateY(-3px) scale(1.03);
+            color: #fff;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 100, 0.5),
+                0 0 40px rgba(0, 255, 200, 0.3),
+                0 0 60px rgba(150, 0, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        /* Радужная анимация текста внутри кнопки при наведении */
+        .btn:hover {
+            background-image: linear-gradient(
+                90deg,
+                #ff0000, #ff8800, #ffff00, #00ff00,
+                #00ffff, #0088ff, #8800ff, #ff00ff, #ff0000
+            );
+            background-size: 400% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowText 3s linear infinite;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .container {
+                padding: 35px 22px;
+                border-radius: 18px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            p {
+                font-size: 0.9em;
+                margin-bottom: 28px;
+            }
+
+            .links-list {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 13px 16px;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .links-list {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Очень много плавающих неоновых частиц -->
+<div class="particles" id="particles"></div>
+
+<div class="container">
+    <h1>Сайты</h1>
+    <p>Выберите интересующий сайт для просмотра демо-версии:</p>
+
+    <div class="links-list">
+        <a href="projects.html" class="btn" target="_blank">Проекты</a>
+        <a href="programming.html" class="btn" target="_blank">Программирование</a>
+        <a href="games.html" class="btn" target="_blank">Игры</a>
+        <a href="ping-pong.html" class="btn" target="_blank">Пинг Понг</a>
+        <a href="mathematics.html" class="btn" target="_blank">Математика</a>
+        <a href="trigonometry.html" class="btn" target="_blank">Тригонометрия</a>
+        <a href="matrices.html" class="btn" target="_blank">Матрицы</a>
+        <a href="accounting-department.html" class="btn" target="_blank">Бухгалтерия</a>
+        <a href="mathematical-modeling.html" class="btn" target="_blank">Математическое моделирование</a>
+        <a href="logarithms.html" class="btn" target="_blank">Логарифмы</a>
+        <a href="planimetry.html" class="btn" target="_blank">Планиметрия</a>
+        <a href="informatics.html" class="btn" target="_blank">Информатика</a>
+        <a href="artificial-intelligence.html" class="btn" target="_blank">Искусственный интеллект</a>
+        <a href="cybersecurity.html" class="btn" target="_blank">Кибербезопасность</a>
+        <a href="virtual-reality.html" class="btn" target="_blank">Виртуальная реальность</a>
+        <a href="testing.html" class="btn" target="_blank">Тестирование</a>
+        <a href="cloud-technologies.html" class="btn" target="_blank">Облачные технологии</a>
+        <a href="analysis.html" class="btn" target="_blank">Анализ</a>
+        <a href="automation.html" class="btn" target="_blank">Автоматизация</a>
+        <a href="design.html" class="btn" target="_blank">Дизайн</a>
+        <a href="quantum-programming.html" class="btn" target="_blank">Квантовое программирование</a>
+        <a href="game-dev.html" class="btn" target="_blank">Разработка игр</a>
+        <a href="web-dev.html" class="btn" target="_blank">Веб-разработка</a>
+        <a href="physics.html" class="btn" target="_blank">Физика</a>
+        <a href="lasers.html" class="btn" target="_blank">Лазеры</a>
+        <a href="quantum-world.html" class="btn" target="_blank">Квантовый мир</a>
+        <a href="space.html" class="btn" target="_blank">Космос</a>
+        <a href="aviation.html" class="btn" target="_blank">Авиация</a>
+        <a href="electronics.html" class="btn" target="_blank">Электроника</a>
+        <a href="robotics.html" class="btn" target="_blank">Робототехника</a>
+        <a href="bioengineering.html" class="btn" target="_blank">Биоинженерия</a>
+        <a href="geodesy.html" class="btn" target="_blank">Геодезия</a>
+        <a href="geometric-optics.html" class="btn" target="_blank">Геометрооптика</a>
+        <a href="atomic-physics.html" class="btn" target="_blank">Атомная физика</a>
+        <a href="energy-sector.html" class="btn" target="_blank">Энергетика</a>
+        <a href="python.html" class="btn" target="_blank">Руководство по Python</a>
+        <a href="c-lang.html" class="btn" target="_blank">Руководство по C</a>
+        <a href="cpp.html" class="btn" target="_blank">Руководство по C++</a>
+        <a href="csharp.html" class="btn" target="_blank">Руководство по C#</a>
+        <a href="java.html" class="btn" target="_blank">Руководство по Java</a>
+        <a href="javacript.html" class="btn" target="_blank">Руководство по JavaScript</a>
+        <a href="go-lang.html" class="btn" target="_blank">Руководство по Go</a>
+        <a href="php.html" class="btn" target="_blank">Руководство по PHP</a>
+        <a href="kotlin.html" class="btn" target="_blank">Руководство по Kotlin</a>
+        <a href="swift.html" class="btn" target="_blank">Руководство по Swift</a>
+        <a href="rust.html" class="btn" target="_blank">Руководство по Rust</a>
+        <a href="typescript.html" class="btn" target="_blank">Руководство по TypeScript</a>
+    </div>
+</div>
+
+<script>
+    // Генерация ОЧЕНЬ большого количества радужных частиц
+    (function createParticles() {
+        const container = document.getElementById('particles');
+        const colors = [
+            '#ff0000', '#ff4400', '#ff8800', '#ffcc00', '#ffff00',
+            '#88ff00', '#00ff00', '#00ff88', '#00ffcc', '#00ffff',
+            '#0088ff', '#4400ff', '#8800ff', '#cc00ff', '#ff00ff',
+            '#ff0088', '#ff0055', '#ff00cc', '#aa00ff', '#00ccff'
+        ];
+
+        // 250 частиц — очень много!
+        const PARTICLE_COUNT = 250;
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+
+            // Случайный цвет из радужной палитры
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            // Случайные размеры
+            const size = Math.random() * 5 + 1.5;
+
+            // Случайная позиция по горизонтали
+            const left = Math.random() * 100;
+
+            // Случайная длительность и задержка
+            const duration = Math.random() * 20 + 8;
+            const delay = Math.random() * 20;
+
+            particle.style.left = left + '%';
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.background = color;
+            particle.style.boxShadow = `0 0 ${size * 3}px ${color}, 0 0 ${size * 6}px ${color}, 0 0 ${size * 10}px ${color}`;
+            particle.style.animationDuration = duration + 's';
+            particle.style.animationDelay = delay + 's';
+
+            // Добавляем случайные дополнительные анимации
+            if (Math.random() > 0.7) {
+                particle.classList.add('twinkle');
+                particle.style.animationDuration = duration + 's, ' + (Math.random() * 2 + 1.5) + 's';
+            }
+            if (Math.random() > 0.85) {
+                particle.classList.add('spin');
+                particle.style.animationDuration = duration + 's, ' + (Math.random() * 3 + 2) + 's';
+            }
+
+            container.appendChild(particle);
+        }
+    })();
+</script>
+
+</body>
+</html>
