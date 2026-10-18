@@ -1,2 +1,2 @@
-# tech-themes-pages
-pages themes: mathematics, informatics, physics, games
+# websites
+websites themes: games, mathematics, informatics, physics, programming
