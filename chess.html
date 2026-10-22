@@ -1,0 +1,338 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>NEON CHESS — шахматы 2D и 3D</title>
+<style>
+:root{--a:#00f0ff;--bg:#0a0618;--tx:#e8eaff;--wp:#fff;--bp:#ff3df2;--lc:#3b4a8a;--dc:#1b1f4d;--bs:min(92vw,560px);--tilt:50deg;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--a) transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:#0004}::-webkit-scrollbar-thumb{background:linear-gradient(var(--a),#ff3df2,#b6ff00);border-radius:9px;border:2px solid transparent;background-clip:padding-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{background:radial-gradient(circle at 15% 0,color-mix(in srgb,var(--a) 28%,transparent),transparent 45%),radial-gradient(circle at 90% 40%,#ff3df230,transparent 40%),var(--bg);color:var(--tx);font:15px/1.6 system-ui,"Segoe UI",sans-serif;min-height:100vh}
+header{position:sticky;top:0;z-index:9;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 4vw;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 80%,transparent);border-bottom:1px solid var(--a);box-shadow:0 0 20px color-mix(in srgb,var(--a) 50%,transparent)}
+nav{display:flex;gap:16px;flex-wrap:wrap}nav a{color:var(--tx);text-decoration:none}nav a:hover{color:var(--a);text-shadow:0 0 10px var(--a)}
+.rb{background:linear-gradient(90deg,#00f0ff,#ff3df2,#b6ff00,#ffa600,#00f0ff);background-size:300%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:rb 6s linear infinite;font-weight:800}@keyframes rb{to{background-position:300%}}
+section{max-width:1200px;margin:auto;padding:36px 4vw}h2{font-size:1.8rem;margin-bottom:16px}h1{font-size:clamp(2rem,6vw,4rem);line-height:1.1}
+.hero{text-align:center;padding-top:60px}.hero p{max-width:720px;margin:16px auto 24px;opacity:.85}
+button,select,input{font:inherit}
+.b{background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--tx);border:1px solid var(--a);border-radius:10px;padding:7px 14px;cursor:pointer;transition:.2s;text-decoration:none;display:inline-block}.b:hover,.b.on{background:var(--a);color:#000;box-shadow:0 0 16px var(--a)}.b:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #b6ff00;outline-offset:2px}
+select,input[type=color]{background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--tx);border:1px solid var(--a);border-radius:8px;padding:5px 8px}
+.g{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.c{border:1px solid var(--k,var(--a));border-radius:16px;padding:18px;background:color-mix(in srgb,var(--tx) 6%,transparent);box-shadow:0 0 22px -6px var(--k,var(--a));display:flex;flex-direction:column;gap:10px}.c h3{color:var(--k)}.c p{flex:1;font-size:.92rem;opacity:.9}.c div{display:flex;gap:8px}
+.game{display:grid;grid-template-columns:minmax(0,min(48%,var(--bs))) minmax(0,1fr);gap:clamp(12px,2vw,22px);align-items:start;justify-content:center;width:100%;min-width:0}.game>div,.panel{min-width:0;max-width:100%}@media(max-width:900px){.game{grid-template-columns:minmax(0,1fr)}.game>div:first-child{width:100%}}
+#bw{position:relative;perspective:1200px;width:min(100%,var(--bs));max-width:100%;aspect-ratio:1;height:auto;margin:0 auto 12px;container-type:inline-size}.d3 #bw{aspect-ratio:1;height:auto;margin:26px auto 12px}
+#bd{display:grid;grid:repeat(8,1fr)/repeat(8,1fr);width:100%;aspect-ratio:1;border-radius:8px;box-shadow:0 0 0 4px var(--a),0 0 34px var(--a);transform-style:preserve-3d;transition:transform .5s}
+.d3 #bd{transform:rotateX(var(--tilt));box-shadow:0 0 0 4px var(--a),0 18px 0 -2px #000a,0 0 40px var(--a)}
+.s{position:relative;display:grid;place-items:center;transform-style:preserve-3d;cursor:pointer}.s.l{background:var(--lc)}.s.d{background:var(--dc)}
+.s[data-c]::before{content:attr(data-c);position:absolute;left:3px;top:1px;font-size:10px;opacity:.75;color:#fff;z-index:2}.nc .s::before{display:none}
+.s.lm{box-shadow:inset 0 0 0 60px #ffe60040}.s.sel{outline:3px solid #b6ff00;outline-offset:-3px}.s.hi{outline:3px dashed var(--a);outline-offset:-3px}.s.ck{box-shadow:inset 0 0 22px 8px #ff2d55}
+.s.mv::after,.s.cp::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:#b6ff00aa;box-shadow:0 0 12px #b6ff00;pointer-events:none}.s.cp::after{width:86%;height:86%;background:none;border:3px solid #ff2d55}.nh .s::after{display:none}
+.p{font-size:clamp(1.25rem,10cqi,4.5rem);line-height:1;color:var(--wp);-webkit-text-stroke:0;text-shadow:0 0 8px #000a;pointer-events:none;animation:pop .18s}.p.b{color:var(--bp);background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;display:inline;cursor:default;text-shadow:0 0 8px #0008;-webkit-text-stroke:0}@keyframes pop{from{transform:scale(.6)}}
+.d3 .p{transform:rotateX(calc(-1*var(--tilt))) translateY(-16%);transform-origin:50% 85%;text-shadow:0 5px 8px #0008;animation:none}.d3 .s:hover{transform:translateZ(8px)}
+#pr{position:absolute;inset:38% 8%;display:flex;gap:8px;justify-content:center;z-index:5;pointer-events:auto}#pr[hidden]{display:none!important;pointer-events:none}#pr button{font-size:2.4rem;flex:1}
+.panel{display:flex;flex-direction:column;gap:12px;border:1px solid var(--a);border-radius:16px;padding:16px;background:color-mix(in srgb,var(--tx) 5%,transparent);box-shadow:0 0 24px -6px var(--a)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>label{min-width:84px;opacity:.8}
+#st{font-size:1.15rem;font-weight:700}#ms{color:#b6ff00;min-height:1.5em}#die{font-size:2.6rem;line-height:1}
+.cl{display:flex;gap:10px}.cl span{flex:1;text-align:center;font:700 1.3rem ui-monospace,monospace;border:1px solid #ff3df2;border-radius:10px;padding:4px;box-shadow:0 0 12px -3px #ff3df2}
+#ml{max-height:200px;overflow:auto;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}.m{padding:2px 7px;border-radius:7px;background:#ffffff12;cursor:pointer}.m.on{background:var(--a);color:#000}.m i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--k);box-shadow:0 0 8px var(--k)}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.sg label{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid #ffffff22;border-radius:10px}
+details{border:1px solid #ffffff22;border-radius:12px;padding:10px 14px;margin-bottom:10px}summary{cursor:pointer;font-weight:700}details p,details li{margin-top:6px;opacity:.9;margin-left:0}details ul{padding-left:20px}
+footer{text-align:center;padding:30px;opacity:.6}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Адаптивный игровой зал: доска и панель занимают только доступную ширину */
+#bd{width:100%;height:auto;aspect-ratio:1;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));}
+.s{min-width:0;min-height:0;}
+.panel{overflow-wrap:anywhere;}
+.panel .row{min-width:0;align-items:center;}
+.panel .row>label{flex:0 0 88px;min-width:0;overflow-wrap:anywhere;}
+.panel select{min-width:0;max-width:100%;flex:1 1 150px;}
+.panel .row .b{max-width:100%;white-space:normal;}
+.panel .row:has(>button){align-items:stretch;}
+.panel .row:has(>button) .b{flex:1 1 auto;}
+.cl{min-width:0;}
+.cl span{min-width:0;overflow:hidden;}
+#ml{min-width:0;overflow-wrap:anywhere;}
+.sg{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));}
+.sg label{min-width:0;overflow-wrap:anywhere;}
+.sg input{max-width:48%;min-width:0;}
+#pr{flex-wrap:wrap;align-items:center;}
+#pr button{min-width:0;font-size:clamp(1.5rem,8cqi,2.4rem);}
+@media(min-width:901px){
+  #play{max-width:1440px;}
+  .game{grid-template-columns:minmax(0, min(48%, 560px)) minmax(300px,1fr);}
+}
+@media(max-width:900px){
+  .game{grid-template-columns:minmax(0,1fr);gap:18px;}
+  .game>div:first-child{min-width:0;}
+  #bw{width:min(100%,var(--bs));}
+  .panel{padding:clamp(12px,3vw,16px);}
+}
+@media(max-width:480px){
+  section{padding-left:4vw;padding-right:4vw;}
+  .panel .row>label{flex-basis:100%;width:100%;}
+  .panel .row select{flex-basis:100%;width:100%;}
+  .panel .row:has(>button){gap:6px;}
+  .panel .row:has(>button) .b{flex:1 1 calc(50% - 6px);padding:7px 8px;}
+  .cl span{font-size:1rem;}
+  #st{font-size:1rem;}
+}
+</style></head><body>
+<header><b class="rb" style="font-size:1.4rem">♞ NEON CHESS</b><nav><a href="#modes">Режимы</a><a href="#play">Играть</a><a href="#set">Настройки</a><a href="#guide">Справка</a></nav></header>
+<section class="hero"><h1 class="rb">Шахматы в неоне: 2D и 3D</h1><p>Играйте против ИИ десяти уровней, вдвоём за одним экраном, разбирайте партии с движком, решайте 100 задач и пробуйте шахматы с игральной костью. Всё работает прямо в браузере, без установки.</p><a class="b" href="#play">Начать игру</a></section>
+<section id="modes"><h2 class="rb">Режимы игры</h2><div class="g" id="mc"></div></section>
+<section id="play"><h2 class="rb">Игровой зал</h2><div class="game"><div><div id="bw"><div id="bd"></div><div id="pr" hidden></div></div></div>
+<div class="panel"><div class="row"><label>Режим</label><select id="md"><option value="ai">Против ИИ</option><option value="pvp">1 на 1</option><option value="analysis">Анализ партий</option><option value="puzzle">Задачи</option><option value="dice-ai">Кости: против ИИ</option><option value="dice-pvp">Кости: 1 на 1</option></select></div>
+<div class="row"><label>Вид</label><button class="b on" id="v2">2D</button><button class="b" id="v3">3D</button></div>
+<div class="row" data-v="ai dice-ai"><label>Уровень ИИ</label><select id="lv"></select></div>
+<div class="row" data-v="ai dice-ai"><label>Ваш цвет</label><select id="hc"><option value="w">Белые</option><option value="b">Чёрные</option><option value="r">Случайно</option></select></div>
+<div class="row" data-v="ai pvp dice-ai dice-pvp"><label>Время</label><select id="tm"><option value="0:0">Без часов</option><option value="1:0">Пуля 1+0</option><option value="3:0">Блиц 3+0</option><option value="3:2">Блиц 3+2</option><option value="5:0">Блиц 5+0</option><option value="10:0">Рапид 10+0</option><option value="15:10">Рапид 15+10</option><option value="30:0">Классика 30+0</option></select></div>
+<div class="row" data-v="puzzle"><label>Задача</label><select id="pzs"></select></div>
+<div class="row" data-v="analysis"><label>Партия</label><select id="hs"></select><button class="b" id="hc2">Очистить историю</button></div>
+<div class="row"><button class="b" id="go">▶ Новая игра</button><button class="b" id="un" data-v="ai pvp analysis">↶ Отмена хода</button><button class="b" id="ht">💡 Подсказка</button><button class="b" id="dr" hidden>Ничья по правилу</button><button class="b" id="fp">⇅ Развернуть</button><button class="b" id="rs" data-v="ai pvp dice-ai dice-pvp">🏳 Сдаться</button><button class="b" id="nx" data-v="puzzle">След. задача ›</button></div>
+<div class="cl"><span id="c1">⚫ ∞</span><span id="c0">⚪ ∞</span></div>
+<div id="st"></div><div id="die"></div><div id="ms"></div><div id="an"></div><div id="ml"></div></div></div></section>
+<section id="set"><h2 class="rb">Настройки</h2><div class="sg">
+<label>Цвет белых фигур<input type="color" data-k="wp"></label><label>Цвет чёрных фигур<input type="color" data-k="bp"></label>
+<label>Светлые клетки<input type="color" data-k="lc"></label><label>Тёмные клетки<input type="color" data-k="dc"></label>
+<label>Цвет интерфейса<input type="color" data-k="a"></label><label>Цвет фона<input type="color" data-k="bg"></label>
+<label>Угол наклона 3D<input type="range" min="20" max="70" data-k="tilt"></label><label>Размер доски<input type="range" min="280" max="720" data-k="bs"></label>
+<label>Громкость<input type="range" min="0" max="100" data-k="vol"></label><label>Звуки ходов<input type="checkbox" data-k="snd"></label>
+<label>Фоновая музыка<input type="checkbox" data-k="music"></label><label>Подсветка ходов<input type="checkbox" data-k="hl"></label>
+<label>Координаты<input type="checkbox" data-k="co"></label><label>Авто-ферзь при превращении<input type="checkbox" data-k="au"></label>
+<label>Поворот доски в режиме 1 на 1<input type="checkbox" data-k="fa"></label></div>
+<div class="row" style="margin-top:14px" id="pr2"></div></section>
+<section id="guide"><h2 class="rb">Справка</h2>
+<details open><summary>Как играть</summary><p>Нажмите на фигуру, затем на подсвеченную клетку. Поддерживаются рокировка, взятие на проходе, превращение пешки, шах, мат, пат, правило 50 ходов (по заявлению), автоматическая ничья после 75 ходов без взятий и ходов пешкой, повторение позиции и недостаток материала. Для переключения 2D и 3D нажмите кнопку «Вид».</p></details>
+<details><summary>Уровни ИИ</summary><ul id="gl"></ul></details>
+<details><summary>Анализ: уровни хода</summary><p>Движок сравнивает ваш ход с лучшим ходом в позиции и показывает потерю в сотых долях пешки.</p><ul id="ga"></ul></details>
+<details><summary>Задачи</summary><p>Всего 100 задач: №1–50 «Мат в 1», №51–90 «Мат в 2», №91–100 «Выиграй материал». Позиции создаются из случайных партий и проверяются движком, поэтому каждая задача имеет проверенное решение. Решённые задачи отмечаются галочкой.</p></details>
+<details><summary>Шахматы с костью</summary><p>В начале каждого хода выпадает число: 1 — пешка, 2 — конь, 3 — слон, 4 — ладья, 5 — ферзь, 6 — король. Ходить нужно фигурой выпавшего типа. Если такой фигурой ходов нет, ход пропускается. Шахов нет: выигрывает тот, кто съест короля. Рокировка отключена.</p></details></section>
+<section id="academy"><h2 class="rb">Шахматная академия</h2>
+<p>Этот раздел поможет освоиться в шахматах, понять обозначения на доске и использовать игровые режимы с пользой. Читайте темы по порядку или откройте только то, что нужно сейчас.</p>
+<div class="g">
+<article class="c" style="--k:#00f0ff"><h3>♙ Цель партии</h3><p>Главная цель обычных шахмат — поставить мат королю соперника. Мат означает, что король находится под шахом и у него нет ни одного законного способа спастись. Короля не снимают с доски. Если король не под шахом, но ходов нет, возникает пат — ничья.</p></article>
+<article class="c" style="--k:#ff3df2"><h3>♘ Как ходят фигуры</h3><p><b>Король</b> перемещается на одну клетку в любом направлении. <b>Ферзь</b> — по горизонтали, вертикали и диагонали на любое расстояние. <b>Ладья</b> ходит по прямым, <b>слон</b> — по диагоналям. <b>Конь</b> делает ход буквой «Г» и может перепрыгивать через фигуры. <b>Пешка</b> идёт вперёд, обычно на одну клетку, а бьёт по диагонали.</p></article>
+<article class="c" style="--k:#b6ff00"><h3>♙ Ценность фигур</h3><p>Для быстрой оценки позиции часто используют условные значения: пешка — 1, конь — около 3, слон — около 3, ладья — около 5, ферзь — около 9. Король бесценен. Это ориентир, а не точный расчёт: активная фигура или проходная пешка иногда важнее материала.</p></article>
+</div>
+<details open><summary>Начало партии: три простых принципа</summary><ol>
+<li><b>Боритесь за центр.</b> Клетки e4, d4, e5 и d5 особенно важны: фигуры из центра обычно контролируют больше полей.</li>
+<li><b>Развивайте лёгкие фигуры.</b> Выводите коней и слонов на активные позиции, а не передвигайте одну и ту же фигуру без причины.</li>
+<li><b>Позаботьтесь о короле.</b> Рокировка часто помогает спрятать короля и соединить ладьи. Не откладывайте безопасность ради случайной пешки.</li>
+<li><b>Не выводите ферзя слишком рано.</b> Соперник может нападать на него с темпом, одновременно развивая свои фигуры.</li>
+<li><b>Перед ходом проверьте угрозы.</b> Убедитесь, что ваша фигура не останется без защиты и что соперник не угрожает матом.</li>
+</ol></details>
+<details><summary>Тактика: комбинации, которые стоит узнавать</summary><ul>
+<li><b>Вилка.</b> Одна фигура одновременно нападает на две или больше целей. Особенно часто вилки делает конь.</li>
+<li><b>Связка.</b> Фигура не может или не должна отходить, потому что за ней находится более ценная цель, часто король.</li>
+<li><b>Двойной удар.</b> Один ход создаёт две угрозы, и защититься от обеих бывает трудно.</li>
+<li><b>Открытое нападение.</b> Фигура отходит и открывает линию для атаки другой фигуры.</li>
+<li><b>Открытый шах.</b> При открытии линии одна фигура объявляет шах, пока другая делает ход. Иногда одновременно возникает двойной шах.</li>
+<li><b>Отвлечение защитника.</b> Соперника заставляют покинуть поле или линию, которую он защищал.</li>
+<li><b>Перегрузка.</b> Одна фигура защищает слишком много объектов и не может справиться со всеми угрозами.</li>
+<li><b>Матовая сеть.</b> Несколько фигур перекрывают королю пути отхода и готовят решающий шах.</li>
+</ul><p>Полезная привычка: сначала ищите шахи, затем взятия, затем прямые угрозы. Для каждого кандидата проверяйте лучший ответ соперника, а не только собственный замысел.</p></details>
+<details><summary>Рокировка, взятие на проходе и превращение</summary><p><b>Рокировка</b> — специальный ход короля и ладьи. Между ними не должно быть фигур; король не должен находиться под шахом, проходить через атакованное поле или завершать ход под шахом. Рокировка также невозможна, если король или выбранная ладья уже двигались.</p><p><b>Взятие на проходе</b> возможно сразу после того, как пешка соперника прошла две клетки и оказалась рядом с вашей пешкой. Взять её можно так, словно она прошла только одну клетку; право на такое взятие действует лишь один ответный ход.</p><p><b>Превращение</b> происходит, когда пешка достигает последней горизонтали. Её заменяют ферзём, ладьёй, слоном или конём. Чаще выбирают ферзя, но иногда конь позволяет дать шах или мат, которого не даёт ферзь.</p></details>
+<details><summary>Ничья и завершение игры</summary><p>Партия может закончиться матом, патом, соглашением о ничьей, недостатком материала для мата, троекратным повторением позиции или правилом 50 ходов при корректном заявлении. В некоторых правилах автоматическая ничья наступает после 75 ходов каждой стороны без взятия и хода пешкой. Конкретные варианты завершения зависят от режима и реализации игры.</p><p>Недостаток материала — это позиция, в которой мат невозможен при любой последовательности законных ходов, например король против короля. Сам по себе небольшой перевес в материале ещё не гарантирует победу: важно учитывать активность фигур и безопасность королей.</p></details>
+<details><summary>Как читать координаты и запись ходов</summary><p>Вертикали обозначаются буквами a–h слева направо со стороны белых, горизонтали — цифрами 1–8 от белых к чёрным. Каждое поле имеет уникальное имя: например, e4 находится на вертикали e и горизонтали 4. Включите настройку «Координаты», чтобы видеть обозначения на доске.</p><p>В краткой шахматной записи обычно используют K для короля, Q для ферзя, R для ладьи, B для слона и N для коня; пешка обозначается без буквы. Например, Nf3 означает ход конём на f3, а exd5 — взятие пешкой с вертикали e на поле d5. Символ + обозначает шах, # — мат, O-O — короткую рокировку, O-O-O — длинную.</p><p>В интерфейсе NEON CHESS список ходов помогает вернуться к позиции в режиме анализа. Выбирая ход, сравнивайте положение до и после него: изменились ли угрозы, защита короля и контроль над центром.</p></details>
+<details><summary>План в миттельшпиле</summary><ol>
+<li>Определите, у кого безопаснее король и у кого больше активных фигур.</li>
+<li>Найдите слабые пешки: изолированные, сдвоенные или отставшие. Не атакуйте их без подготовки, если соперник получает контригру.</li>
+<li>Сравните открытые линии. Ладьи особенно сильны на открытых вертикалях и на седьмой горизонтали.</li>
+<li>Улучшайте худшую фигуру. Иногда спокойное улучшение позиции полезнее немедленной атаки.</li>
+<li>Если у вас преимущество, меняйте фигуры только тогда, когда это выгодно; не позволяйте сопернику получить активность бесплатно.</li>
+<li>Если позиция хуже, ищите активную контригру, ловушки и возможности создать встречные угрозы.</li>
+</ol></details>
+<details><summary>Эндшпиль: король тоже становится фигурой</summary><p>Когда ферзей и многих фигур уже нет, король часто выходит в центр и помогает пешкам. Проходная пешка — та, которую пешки соперника не могут остановить на соседних вертикалях. Её продвижение может решить партию, поэтому королю важно поддерживать её или блокировать проходную соперника.</p><p>Перед продвижением пешки оцените квадрат пешки: успеет ли король соперника догнать её? Считайте варианты до превращения, учитывая шахи и возможность патовой ловушки. В ладейных окончаниях активность ладьи нередко важнее лишней пешки.</p></details>
+<details><summary>Как тренироваться с NEON CHESS</summary><ol>
+<li><b>Начните с задач.</b> Решите несколько позиций на мат в один ход, проговаривая, почему другие шахи не работают.</li>
+<li><b>Играйте на комфортной силе.</b> Начните с уровня ИИ, на котором успеваете замечать ошибки и понимать план.</li>
+<li><b>Используйте подсказку после попытки.</b> Сначала найдите свой вариант самостоятельно, затем сравните его с подсказкой.</li>
+<li><b>Разберите ключевые моменты.</b> В анализе ищите не только проигранный материал, но и пропущенные угрозы, слабого короля или упущенное развитие.</li>
+<li><b>Сохраняйте выводы.</b> После партии запишите одну удачную идею и одну ошибку, которую хотите не повторять.</li>
+<li><b>Меняйте один параметр за раз.</b> Если экспериментируете с видом доски, цветами или временем, не меняйте всё одновременно — так проще понять, что удобно.</li>
+</ol></details>
+<details><summary>Частые вопросы</summary><p><b>Почему ход не выполняется?</b> Возможны шах, блокированная линия, попытка оставить короля под ударом или выбор поля, на которое фигура не может пойти. Выберите фигуру и ориентируйтесь на подсвеченные клетки.</p><p><b>Зачем нужны уровни ИИ?</b> Более высокий уровень обычно анализирует больше вариантов и реже допускает случайные ошибки. Это не гарантия идеальной игры во всех позициях.</p><p><b>Для чего нужен режим 3D?</b> Он меняет визуальный угол доски, сохраняя привычные правила ходов. Если перспектива мешает оценивать поля, вернитесь к 2D.</p><p><b>Что меняет режим с костью?</b> Тип фигуры для хода определяется броском. Это отдельный вариант для развлечения, а не стандартные шахматы: обычные правила шаха и рокировки в нём отключены.</p><p><b>Работает ли сайт без установки?</b> Да, игровые элементы встроены в HTML-файл и запускаются в современном браузере. Некоторые данные истории могут храниться локально в браузере; очистка данных сайта способна удалить их.</p></details>
+</section>
+
+<footer>NEON CHESS · играйте, анализируйте, учитесь</footer>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const U='♚♛♜♝♞♟'.split(''),T='kqrbnp',V={p:100,n:320,b:330,r:500,q:900,k:20000};
+const KN=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]],OR=[[-1,0],[1,0],[0,-1],[0,1]],DG=[[-1,-1],[-1,1],[1,-1],[1,1]],KG=[...OR,...DG];
+const isW=x=>x<'a',sq=s=>'abcdefgh'[s&7]+(8-(s>>3)),kp=(p,w)=>p.b.indexOf(w?'K':'k');
+const st=()=>({b:[...'rnbqkbnrpppppppp',...Array(32).fill(''),...'PPPPPPPPRNBQKBNR'],t:'w',c:'KQkq',e:-1,h:0});
+function att(p,s,by){const r=s>>3,c=s&7,B=p.b,w=by=='w',f=x=>w?x.toUpperCase():x,at=(a,b,k)=>a>=0&&a<8&&b>=0&&b<8&&k.includes(B[a*8+b]);
+ const pr=w?r+1:r-1;if(at(pr,c-1,[f('p')])||at(pr,c+1,[f('p')]))return 1;
+ for(const[a,b]of KN)if(at(r+a,c+b,[f('n')]))return 1;for(const[a,b]of KG)if(at(r+a,c+b,[f('k')]))return 1;
+ for(const ds of[OR,DG]){const k=[f('q'),f(ds==OR?'r':'b')];for(const[a,b]of ds){let rr=r+a,cc=c+b;while(rr>=0&&rr<8&&cc>=0&&cc<8){const x=B[rr*8+cc];if(x){if(k.includes(x))return 1;break}rr+=a;cc+=b}}}return 0}
+function gen(p,ps){const o=[],B=p.b,w=p.t=='w';
+ for(let s=0;s<64;s++){const x=B[s];if(!x||isW(x)!=w)continue;const k=x.toLowerCase(),r=s>>3,c=s&7;
+  const add=(t,pr)=>{if(pr)for(const q of'qrbn')o.push({f:s,t,p:q});else o.push({f:s,t})};
+  const tg=(a,b)=>{if(a<0||a>7||b<0||b>7)return 0;const t=a*8+b,y=B[t];if(y&&isW(y)==w)return 0;add(t);return!y};
+  if(k=='p'){const d=w?-1:1,r1=r+d,lr=w?0:7;
+   if(r1>=0&&r1<8){const one=r1*8+c,two=(r+2*d)*8+c;
+    if(B[one]===''){add(one,r1===lr);/* Two squares only from the starting rank, with both squares clear. */if(r===(w?6:1)&&B[two]==='')add(two)}
+    for(const dc of[-1,1]){const cc=c+dc;if(cc<0||cc>7)continue;const t=r1*8+cc,y=B[t];if(y&&isW(y)!==w)add(t,r1===lr);else if(t===p.e&&y===''&&B[t+(w?8:-8)]===(w?'p':'P'))add(t,r1===lr)}}}
+  else if(k=='n')for(const[a,b]of KN)tg(r+a,c+b);
+  else if(k=='k'){for(const[a,b]of KG)tg(r+a,c+b);
+   if(!ps){const h=w?60:4,e=w?'b':'w',rook=w?'R':'r';if(s===h&&!att(p,h,e)){
+    if(p.c.includes(w?'K':'k')&&B[h+3]===rook&&B[h+1]===''&&B[h+2]===''&&!att(p,h+1,e)&&!att(p,h+2,e))o.push({f:s,t:h+2});
+    if(p.c.includes(w?'Q':'q')&&B[h-4]===rook&&B[h-1]===''&&B[h-2]===''&&B[h-3]===''&&!att(p,h-1,e)&&!att(p,h-2,e))o.push({f:s,t:h-2})}}}
+  else for(const[a,b]of k=='r'?OR:k=='b'?DG:KG){let rr=r+a,cc=c+b;while(tg(rr,cc)){rr+=a;cc+=b}}}
+ return o}
+function mk(p,m){const B=p.b.slice(),x=B[m.f],w=isW(x),k=x.toLowerCase();let c=p.c,e=-1,h=p.h+1;if(B[m.t]||k=='p')h=0;
+ if(k=='p'&&m.t==p.e&&!B[m.t])B[m.t+(w?8:-8)]='';if(k=='p'&&Math.abs(m.t-m.f)==16)e=(m.f+m.t)/2;
+ if(k=='k'&&Math.abs(m.t-m.f)==2){const a=m.t>m.f,r=a?m.f+3:m.f-4;B[a?m.f+1:m.f-1]=B[r];B[r]=''}
+ B[m.t]=m.p?(w?m.p.toUpperCase():m.p):x;B[m.f]='';
+ for(const[s,r]of[[60,'KQ'],[63,'K'],[56,'Q'],[4,'kq'],[7,'k'],[0,'q']])if(m.f==s||m.t==s)for(const z of r)c=c.replace(z,'');
+ return{b:B,t:w?'b':'w',c,e,h}}
+const chk=p=>{const k=kp(p,p.t=='w');return k>=0&&att(p,k,p.t=='w'?'b':'w')};
+const leg=p=>gen(p).filter(m=>{
+ /* In orthodox chess the king is checked, never captured. The dice variant intentionally uses king capture. */
+ if(p.b[m.t]&&p.b[m.t].toLowerCase()==='k')return false;
+ const q=mk(p,m),k=kp(q,p.t==='w');
+ return k>=0&&!att(q,k,p.t==='w'?'b':'w');
+});
+function res(p){
+ const L=leg(p);if(!L.length)return chk(p)?(p.t==='w'?'0-1':'1-0'):'½-½';
+ if(p.h>=150)return'½-½';
+ const pieces=p.b.map((x,i)=>({x,i})).filter(z=>z.x&&z.x.toLowerCase()!=='k');
+ if(!pieces.length||pieces.length===1&&'nb'.includes(pieces[0].x.toLowerCase()))return'½-½';
+ /* K+B vs K+B with both bishops confined to the same square colour is dead material. */
+ if(pieces.every(z=>z.x.toLowerCase()==='b')&&new Set(pieces.map(z=>((z.i>>3)+(z.i&7))&1)).size===1)return'½-½';
+ return'';
+}
+function posKey(p){
+ let ep='-';if(p.e>=0){const src=p.t==='w'?[p.e+7,p.e+9]:[p.e-7,p.e-9],pawn=p.t==='w'?'P':'p';if(src.some(i=>i>=0&&i<64&&Math.abs((i&7)-(p.e&7))===1&&p.b[i]===pawn))ep=p.e;}
+ return p.b.join('')+'|'+p.t+'|'+p.c+'|'+ep;
+}
+function repetitionCount(p){const k=posKey(p);return G.ps.reduce((n,x)=>n+(posKey(x)===k),0)}
+function ev(p){let s=0;p.b.forEach((x,i)=>{if(!x)return;const k=x.toLowerCase(),r=i>>3,c=i&7,w=isW(x),cd=7-Math.abs(c-3.5)-Math.abs(r-3.5);let v=V[k];if(k=='p')v+=(w?7-r:r)*8+cd*2;else if(k!='k'&&k!='r')v+=cd*4;s+=w?v:-v});return s}
+let DL=0;const cv=(p,m)=>p.b[m.t]?V[p.b[m.t].toLowerCase()]:0;
+function sr(p,d,a,b){
+ if(d===0||Date.now()>DL)return(p.t==='w'?1:-1)*ev(p);
+ /* Search legal moves, not pseudo-legal moves: otherwise the engine can leave its king in check. */
+ const M=leg(p).sort((x,y)=>cv(p,y)-cv(p,x));let bs=-1e9;
+ if(!M.length)return chk(p)?-100000-d:0;
+ for(const m of M){const v=-sr(mk(p,m),d-1,-b,-a);if(v>bs)bs=v;if(v>a)a=v;if(a>=b)break}
+ return bs;
+}
+function best(p,d,nz){DL=Date.now()+(d>3?3500:2500);return leg(p).map(m=>({m,s:-sr(mk(p,m),d-1,-1e9,1e9)+(Math.random()-.5)*nz})).sort((a,b)=>b.s-a.s)}
+const LV=[[1,900],[1,320],[1,120],[2,200],[2,80],[2,25],[3,60],[3,15],[3,0],[4,0]],LN=['Новичок','Любитель','Начинающий','Клубный игрок','Разрядник','КМС','Мастер','Эксперт','Гроссмейстер','Суперкомпьютер'];
+const AL=[['Зевок','#ff2d55'],['Грубая ошибка','#ff5a3c'],['Ошибка','#ff8a00'],['Слабый ход','#ffb800'],['Неточность','#ffe600'],['Нормальный','#c6ff00'],['Хороший','#7dff4f'],['Очень хороший','#2dff9a'],['Отличный','#00f0ff'],['Идеальный','#b66dff']];
+const lvl=l=>l<=0?9:l<=12?8:l<=30?7:l<=55?6:l<=90?5:l<=140?4:l<=200?3:l<=300?2:l<=450?1:0;
+/* settings */
+const DS={wp:'#ffffff',bp:'#ff3df2',lc:'#3b4a8a',dc:'#1b1f4d',a:'#00f0ff',bg:'#0a0618',tx:'#e8eaff',vol:60,tilt:50,bs:560,snd:1,music:0,hl:1,co:1,au:1,fa:0};
+let S={...DS};try{Object.assign(S,JSON.parse(localStorage.ncS))}catch(e){}
+const sv=()=>{try{localStorage.ncS=JSON.stringify(S)}catch(e){}};
+function ap(){const r=document.documentElement.style;for(const k of['wp','bp','lc','dc','a','bg','tx'])r.setProperty('--'+k,S[k]);r.setProperty('--tilt',S.tilt+'deg');r.setProperty('--bs','min(92vw,'+S.bs+'px)');document.body.classList.toggle('nc',!S.co);document.body.classList.toggle('nh',!S.hl);
+ $$('[data-k]').forEach(i=>{if(i.type=='checkbox')i.checked=!!S[i.dataset.k];else i.value=S[i.dataset.k]})}
+const PR={'Неон':{},'Закат':{wp:'#fff3d6',bp:'#ff4d6d',lc:'#ff9e5e',dc:'#7a2e6e',a:'#ff4d6d',bg:'#1a0614'},'Лес':{wp:'#f4ffe0',bp:'#0b3d1e',lc:'#b6ff6a',dc:'#1f7a3a',a:'#b6ff00',bg:'#04140a'},'Лёд':{wp:'#ffffff',bp:'#1e3cff',lc:'#bfe9ff',dc:'#4a86c5',a:'#00d5ff',bg:'#06142a'},'Светлая':{wp:'#ffffff',bp:'#222222',lc:'#f0d9b5',dc:'#b58863',a:'#0066ff',bg:'#eef2ff',tx:'#111111'}};
+for(const n in PR){const b=document.createElement('button');b.className='b';b.textContent='Тема «'+n+'»';b.onclick=()=>{Object.assign(S,{wp:DS.wp,bp:DS.bp,lc:DS.lc,dc:DS.dc,a:DS.a,bg:DS.bg,tx:DS.tx},PR[n]);sv();ap();draw()};$('#pr2').append(b)}
+const rs=document.createElement('button');rs.className='b';rs.textContent='Сбросить всё';rs.onclick=()=>{S={...DS};sv();ap();mus();draw()};$('#pr2').append(rs);
+$$('[data-k]').forEach(i=>i.oninput=()=>{const k=i.dataset.k;S[k]=i.type=='checkbox'?+i.checked:i.type=='range'?+i.value:i.value;sv();ap();if(k=='music')mus();draw()});
+/* sound */
+let AC,mi;const au=()=>AC||(AC=new(window.AudioContext||window.webkitAudioContext)());
+function tn(f,d=.15,ty='sine',v=.2,mu){if(!(mu?S.music:S.snd))return;try{const c=au(),o=c.createOscillator(),g=c.createGain();o.type=ty;o.frequency.value=f;g.gain.value=Math.max(1e-4,v*S.vol/100);g.gain.exponentialRampToValueAtTime(1e-4,c.currentTime+d);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d)}catch(e){}}
+function mus(){clearInterval(mi);mi=0;if(!S.music)return;const sc=[0,3,5,7,10,12,15,17];let n=0;mi=setInterval(()=>tn(110*2**(sc[Math.random()*8|0]/12)*(n++%4?1:.5),1.4,'triangle',.12,1),650)}
+document.addEventListener('click',()=>{try{au().resume()}catch(e){}if(S.music&&!mi)mus()},{once:true});
+const snd=k=>k=='cap'?tn(180,.2,'sawtooth',.15):k=='chk'?(tn(660,.12,'square',.1),setTimeout(()=>tn(880,.15,'square',.1),110)):k=='end'?[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tn(f,.3,'triangle',.2),i*140)):tn(420,.09,'triangle',.25);
+/* state */
+let G={},GID=0,SOL=[];try{SOL=JSON.parse(localStorage.ncP||'[]')}catch(e){}
+const msg=t=>$('#ms').textContent=t,fmt=ms=>{const s=Math.ceil(ms/1000);return(s/60|0)+':'+String(s%60).padStart(2,'0')};
+const DN=['пешкой','конём','слоном','ладьёй','ферзём','королём'],PT=['','Мат в 1','Мат в 2','Выиграй материал'];
+const moves=p=>G.mode=='dice'?gen(p,1).filter(m=>p.b[m.f].toLowerCase()=='pnbrqk'[G.die-1]):leg(p);
+function mt(i){const p=G.ps[i],m=G.mv[i],k=p.b[m.f].toLowerCase();if(k=='k'&&Math.abs(m.t-m.f)==2)return m.t>m.f?'O-O':'O-O-O';return(k=='p'?'':U[T.indexOf(k)]+'\uFE0E')+sq(m.f)+(p.b[m.t]||(k=='p'&&m.t==p.e)?'×':'–')+sq(m.t)+(m.p?'='+m.p.toUpperCase():'')}
+function draw(){if(!G.ps)return;const p=G.ps[G.v],bd=$('#bd'),lm=G.v>0?G.mv[G.v-1]:{},h=G.hint||{},ck=G.mode!='dice'&&chk(p)?kp(p,p.t=='w'):-1;
+ if(G.mode=='pvp'&&S.fa)G.fl=p.t=='b';bd.innerHTML='';
+ for(let i=0;i<64;i++){const s=G.fl?63-i:i,r=s>>3,c=s&7,e=document.createElement('div'),x=p.b[s];e.className='s '+((r+c)&1?'d':'l')+(s==G.sel?' sel':'')+(s==lm.f||s==lm.t?' lm':'')+(G.tg&&G.tg.includes(s)?(x?' cp':' mv'):'')+(s==ck?' ck':'')+(s==h.f||s==h.t?' hi':'');e.dataset.s=s;
+  const co=((i>>3)==7?'abcdefgh'[s&7]:'')+((i&7)==0?8-(s>>3):'');if(co)e.dataset.c=co;
+  if(x){const q=document.createElement('span');q.className='p'+(isW(x)?'':' b');q.textContent=U[T.indexOf(x.toLowerCase())]+'\uFE0E';e.append(q)}bd.append(e)}}
+function ui(){const p=G.ps[G.v],t=p.t=='w'?'Белые':'Чёрные';let s;
+ if(G.over)s='🏁 Результат: '+G.over+(G.why?' ('+G.why+')':'');else if(G.thinking)s='🤔 Соперник думает…';
+ else if(G.mode=='puzzle')s='Задача №'+G.pn+' · '+PT[G.pz?G.pz.ty:1]+' · ходят '+t.toLowerCase();else s='Ход: '+t+(G.mode!='dice'&&chk(p)?' — ШАХ!':'');
+ $('#st').textContent=s;$('#die').textContent=G.mode=='dice'&&G.die?'⚀⚁⚂⚃⚄⚅'[G.die-1]+' '+DN[G.die-1]:'';
+ const canClaim=!G.over&&G.mode!=='dice'&&G.mode!=='puzzle'&&G.mode!=='analysis'&&(p.h>=100||repetitionCount(p)>=3);
+ $('#dr').hidden=!canClaim;$('#dr').textContent=p.h>=100?'Ничья: 50 ходов':'Ничья: повтор позиции';tick();
+ $('#ml').innerHTML=G.mv.map((m,i)=>{const a=G.an[i];return`<span class="m${i+1==G.v?' on':''}" data-i="${i+1}"${a?` style="--k:${AL[a.lv][1]}" title="${AL[a.lv][0]} (−${a.loss})"`:''}>${i%2?'':(i/2+1|0)+'. '}${mt(i)}${a?' <i></i>':''}</span>`}).join('');
+ const a=G.mode=='analysis'&&G.an[G.v-1];$('#an').innerHTML=G.mode=='analysis'?'Оценка позиции: '+(ev(p)/100).toFixed(2)+(a?` · <b style="color:${AL[a.lv][1]}">${AL[a.lv][0]}, уровень ${a.lv+1}/10</b> (потеря ${a.loss})${a.loss>0?' · лучше: '+sq(a.bm.f)+'–'+sq(a.bm.t):''}`:'')+(G.prog?' · анализ '+G.prog:''):''}
+function tick(){$('#c0').textContent='⚪ '+(G.tm?fmt(G.clk[0]):'∞');$('#c1').textContent='⚫ '+(G.tm?fmt(G.clk[1]):'∞')}
+setInterval(()=>{if(!G.run||G.over||!G.tm)return;const i=G.ps[G.ps.length-1].t=='w'?0:1;G.clk[i]-=200;if(G.clk[i]<=0){G.clk[i]=0;end(i?'1-0':'0-1','время вышло')}tick()},200);
+function can(){if(G.over||G.thinking||G.rolling)return 0;if(G.mode=='analysis')return 1;if(G.v!=G.ps.length-1)return 0;if(G.mode=='pvp'||G.mode=='dice'&&G.opp=='h')return 1;return G.ps[G.v].t==G.hc}
+function clk(s){if(!can())return;const p=G.ps[G.v],x=p.b[s],L=moves(p);
+ /* Сначала обрабатываем нажатие на подсвеченную точкой клетку: это всегда выбранный легальный ход. */
+ if(G.sel>=0&&G.tg.includes(s)){const ms=L.filter(m=>m.f===G.sel&&m.t===s);if(ms.length)return ms.some(m=>m.p)?promo(ms):play(ms[0])}
+ /* Иначе выбираем свою фигуру и показываем все её доступные клетки. */
+ if(x&&isW(x)===(p.t==='w')){G.sel=s;G.tg=L.filter(m=>m.f===s).map(m=>m.t);if(G.mode==='dice'&&!G.tg.length)msg('Сейчас ходить нужно '+DN[G.die-1]);else msg('')}else{G.sel=-1;G.tg=[]}draw()}
+function promo(ms){if(S.au||G.thinking)return play(ms.find(m=>m.p=='q'));const d=$('#pr');d.hidden=0;d.innerHTML=ms.map(m=>`<button class="b" data-p="${m.p}">${U[T.indexOf(m.p)]}\uFE0E</button>`).join('');d.onclick=e=>{const q=e.target.dataset.p;if(q){d.hidden=1;play(ms.find(m=>m.p==q))}}}
+function play(m){const p=G.ps[G.v];if(G.mode=='analysis'){G.ps.length=G.v+1;G.mv.length=G.v;G.an.length=G.v}
+ const q=mk(p,m),cap=p.b[m.t]||(p.b[m.f].toLowerCase()=='p'&&m.t==p.e);G.mv.push(m);G.ps.push(q);G.v++;G.sel=-1;G.tg=[];G.hint=null;$('#pr').hidden=1;msg('');
+ if(G.tm&&G.run)G.clk[p.t=='w'?0:1]+=G.inc*1000;if(G.tm)G.run=1;snd(G.mode!='dice'&&chk(q)?'chk':cap?'cap':'mv');after()}
+function after(){const p=G.ps[G.v];
+ if(G.mode==='puzzle'){draw();ui();return pz()}
+ if(G.mode==='dice'){if(!p.b.includes('K'))end('0-1','король съеден');else if(!p.b.includes('k'))end('1-0','король съеден')}
+ else{
+  const r=res(p);if(r)end(r,r==='½-½'?(p.h>=150?'правило 75 ходов':'ничья'):'мат/пат');
+  if(!G.over&&G.mode!=='analysis'&&repetitionCount(p)>=5)end('½-½','пятикратное повторение позиции');
+ }
+ if(G.mode=='analysis'&&G.mv.length)G.an[G.v-1]=anMove(G.v-1);draw();ui();if(G.over)return;
+ if(G.mode=='dice')return roll();next()}
+function next(){const p=G.ps[G.v];if((G.mode=='ai'||G.mode=='dice'&&G.opp=='ai')&&!G.over&&p.t!=G.hc)ai()}
+function ai(){const id=G.id;G.thinking=1;ui();setTimeout(()=>{if(G.id!=id)return;const p=G.ps[G.v];let m;
+ if(G.mode=='dice'){const R=moves(p).map(m=>({m,s:-sr(mk(p,m),1,-1e9,1e9)+Math.random()*60*(10-G.lv)})).sort((a,b)=>b.s-a.s);m=R[0].m;if(m.p)m=R.find(r=>r.m.f==m.f&&r.m.t==m.t&&r.m.p=='q').m}
+ else{const[d,nz]=LV[G.lv-1];m=best(p,d,nz)[0].m;if(m.p)m={...m,p:'q'}}
+ G.thinking=0;play(m)},350)}
+function roll(){const id=G.id;G.rolling=1;let n=0;const iv=setInterval(()=>{if(G.id!=id)return clearInterval(iv);$('#die').textContent='⚀⚁⚂⚃⚄⚅'[Math.random()*6|0];tn(300+n*30,.05);if(++n>8){clearInterval(iv);G.die=1+Math.random()*6|0;G.rolling=0;const p=G.ps[G.v];ui();
+ if(!moves(p).length){msg('Нет ходов '+DN[G.die-1]+' — ход пропущен');G.ps[G.v]={...p,t:p.t=='w'?'b':'w',e:-1};return setTimeout(()=>G.id==id&&roll(),900)}next()}},70)}
+function end(r,w){if(G.mode=='analysis'){msg('Партия завершена: '+r);return}if(G.over)return;G.over=r;G.why=w||'';G.run=0;snd('end');
+ if(G.mode=='ai'||G.mode=='pvp'){try{const h=JSON.parse(localStorage.ncH||'[]');h.unshift({t:Date.now(),mode:G.mode,r,mv:G.mv.map(m=>[m.f,m.t,m.p||0])});localStorage.ncH=JSON.stringify(h.slice(0,50))}catch(e){}refH()}ui()}
+/* analysis */
+function anMove(i){const p=G.ps[i],m=G.mv[i],R=best(p,2,0),b=R[0],f=R.find(r=>r.m.f==m.f&&r.m.t==m.t&&(r.m.p||0)==(m.p||0)),loss=f?b.s-f.s:0;return{lv:lvl(loss),loss:Math.round(loss),bm:b.m}}
+function refH(){let h=[];try{h=JSON.parse(localStorage.ncH||'[]')}catch(e){}$('#hs').innerHTML='<option value="">Новая свободная партия</option>'+h.map((g,i)=>`<option value="${i}">${new Date(g.t).toLocaleString('ru')} · ${g.mode=='ai'?'с ИИ':'1 на 1'} · ${g.r} · ${g.mv.length} ходов</option>`).join('')}
+function loadH(i){let g;try{g=JSON.parse(localStorage.ncH)[i]}catch(e){}if(!g)return;let p=st();for(const[f,t,pr]of g.mv){const m={f,t,p:pr||undefined};G.mv.push(m);p=mk(p,m);G.ps.push(p)}G.v=G.mv.length;const id=G.id;let k=0;
+ (function s(){if(G.id!=id)return;if(k>=G.mv.length){G.prog='';ui();return}G.an[k]=anMove(k++);G.prog=k+'/'+G.mv.length;ui();setTimeout(s,0)})()}
+/* puzzles */
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const mate=p=>chk(p)&&!leg(p).length,m1=p=>leg(p).find(m=>mate(mk(p,m))),m2=p=>leg(p).find(m=>{const q=mk(p,m),R=leg(q);return R.length&&R.every(r=>m1(mk(q,r)))});
+const pty=i=>i<=50?1:i<=90?2:3;
+function mkPz(i,ty){ty=ty||pty(i);const R=rng(i*7919+13);
+ for(let a=0;a<(ty==1?4000:ty==2?500:300);a++){let p=st();const n=12+(R()*40|0);
+  for(let k=0;k<n;k++){const L=leg(p);if(!L.length)break;const C=L.filter(m=>p.b[m.t]),pl=C.length&&R()<.55?C:L;p=mk(p,pl[R()*pl.length|0])}
+  if(!leg(p).length||chk(p)&&ty==3)continue;
+  if(ty==1){const u=leg(p).filter(m=>mate(mk(p,m))).length;if(u&&(i%50<25||u==1))return{p,ty}}
+  else if(ty==2){if(!m1(p)&&m2(p))return{p,ty}}
+  else{const B=best(p,2,0);if(B.length>1&&p.b[B[0].m.t]&&B[0].s-B[1].s>250)return{p,ty,sol:B[0].m}}}
+ return ty==1?{p:st(),ty:1}:mkPz(i,1)}
+function loadPz(n){const id=G.id;G.thinking=1;G.pn=n;msg('Подбираю задачу…');setTimeout(()=>{if(G.id!=id)return;const P=mkPz(n);G.thinking=0;G.pz=P;G.ps=[P.p];G.hc=P.p.t;G.fl=G.hc=='b';P.step=0;msg('');draw();ui()},30)}
+function pz(){const P=G.pz,p=G.ps[G.v],last=G.mv[G.v-1];if(p.t==G.hc)return;
+ if(mate(p))return win();if(P.ty==3){return last.f==P.sol.f&&last.t==P.sol.t?win():bad()}
+ const R=leg(p);if(P.ty==2&&!P.step&&R.length&&R.every(r=>m1(mk(p,r)))){P.step=1;const id=G.id;G.thinking=1;ui();msg('Верно, продолжайте!');setTimeout(()=>{if(G.id!=id)return;G.thinking=0;play(R[0])},600)}else bad()}
+function bad(){const id=G.id;msg('Неверно — попробуйте другой ход');G.thinking=1;setTimeout(()=>{if(G.id!=id)return;G.thinking=0;G.ps.pop();G.mv.pop();G.v--;draw();ui()},800)}
+function win(){G.over='✓';G.why='задача решена';msg('✅ Верно! Нажмите «След. задача»');snd('end');if(!SOL.includes(G.pn)){SOL.push(G.pn);try{localStorage.ncP=JSON.stringify(SOL)}catch(e){}refP()}ui()}
+function refP(){$('#pzs').innerHTML=Array.from({length:100},(_,k)=>`<option value="${k+1}">№${k+1} · ${PT[pty(k+1)]} · ур. ${Math.ceil((k+1)/10)}${SOL.includes(k+1)?' ✓':''}</option>`).join('');$('#pzs').value=G.pn||1}
+/* control */
+function setDim(d){document.body.classList.toggle('d3',d==3);$('#v2').classList.toggle('on',d==2);$('#v3').classList.toggle('on',d==3)}
+function vis(){const v=$('#md').value;$$('[data-v]').forEach(e=>e.style.display=e.dataset.v.split(' ').includes(v)?'':'none')}
+function newGame(){const v=$('#md').value,[tm,inc]=$('#tm').value.split(':').map(Number),c=$('#hc').value;
+ G={id:++GID,mode:v.startsWith('dice')?'dice':v,opp:v=='dice-pvp'?'h':'ai',ps:[st()],mv:[],an:[],v:0,over:'',sel:-1,tg:[],lv:+$('#lv').value,fl:0,clk:[0,0],run:0,tm:0,inc:0,hc:'w',pn:+$('#pzs').value};
+ if(v=='ai'||v=='dice-ai'){G.hc=c=='r'?Math.random()<.5?'w':'b':c;G.fl=G.hc=='b'}
+ if(['ai','pvp','dice'].includes(G.mode)){G.tm=tm;G.inc=inc;G.clk=[tm*60000,tm*60000]}
+ $('#pr').hidden=1;msg('');draw();ui();
+ if(v=='puzzle')loadPz(G.pn);else if(v=='analysis'&&$('#hs').value!=='')loadH(+$('#hs').value);else if(G.mode=='dice')roll();else next()}
+function undo(){if(G.thinking||G.rolling||G.mode=='dice'||G.mode=='puzzle')return;let n=G.mode=='ai'&&G.ps[G.v].t==G.hc?2:1;n=Math.min(n,G.mode=='analysis'?1:G.mv.length);if(!n||G.v!=G.ps.length-1)return;G.ps.length-=n;G.mv.length-=n;G.an.length=Math.min(G.an.length,G.mv.length);G.v=G.ps.length-1;G.sel=-1;G.tg=[];G.hint=null;G.over='';G.why='';G.run=G.tm?1:0;$('#pr').hidden=1;draw();ui();next()}
+$('#bd').onclick=e=>{const s=e.target.closest('.s');if(s)clk(+s.dataset.s)};
+$('#ml').onclick=e=>{const m=e.target.closest('.m');if(m&&G.mode=='analysis'){G.v=+m.dataset.i;G.sel=-1;G.tg=[];draw();ui()}};
+$('#go').onclick=newGame;$('#un').onclick=undo;$('#dr').onclick=()=>{if(!G.over&&(G.ps[G.v].h>=100||repetitionCount(G.ps[G.v])>=3))end('½-½',G.ps[G.v].h>=100?'правило 50 ходов':'трёхкратное повторение позиции')};$('#fp').onclick=()=>{G.fl=!G.fl;draw()};$('#v2').onclick=()=>setDim(2);$('#v3').onclick=()=>setDim(3);$('#md').onchange=vis;
+$('#nx').onclick=()=>{$('#pzs').value=Math.min(100,+$('#pzs').value+(G.over?1:0));newGame()};$('#pzs').onchange=newGame;
+$('#hc2').onclick=()=>{try{delete localStorage.ncH}catch(e){}refH()};
+$('#rs').onclick=()=>{if(G.over)return;end((G.mode=='pvp'||G.opp=='h'?G.ps[G.v].t:G.hc)=='w'?'0-1':'1-0','сдача')};
+$('#ht').onclick=()=>{if(!can())return;const p=G.ps[G.v];let m;if(G.mode=='puzzle'){const P=G.pz;m=P.ty==3?P.sol:P.ty==2&&!P.step?m2(p):m1(p);m=m&&{f:m.f,t:m.t}}else if(G.mode=='dice'){m=moves(p)[0];m=m&&{f:m.f,t:m.t}}else{const R=best(p,3,0);m=R[0]&&R[0].m}G.hint=m;draw()};
+/* init */
+$('#lv').innerHTML=LN.map((n,i)=>`<option value="${i+1}"${i==4?' selected':''}>${i+1} · ${n}</option>`).join('');
+$('#gl').innerHTML=LN.map((n,i)=>`<li><b>Уровень ${i+1} — ${n}:</b> глубина расчёта ${LV[i][0]} ${LV[i][0]==1?'ход':'хода'}${LV[i][1]>200?', много случайных ошибок':LV[i][1]>40?', иногда ошибается':LV[i][1]?', редкие неточности':', без случайностей'}</li>`).join('');
+$('#ga').innerHTML=AL.map((a,i)=>`<li style="color:${a[1]}">Уровень ${i+1}: ${a[0]}</li>`).reverse().join('');
+[['ai','Против ИИ','10 уровней силы: от новичка, который часто зевает, до суперкомпьютера с глубоким расчётом. Выбирайте цвет, время и отменяйте ходы.','#00f0ff'],
+['pvp','1 на 1','Двое играют на одном устройстве, ходы по очереди. Доска может сама поворачиваться к ходящему, часы идут для каждого.','#ff3df2'],
+['analysis','Анализ партий','Играйте свою партию или загрузите сыгранную из истории. Движок оценивает каждый ход по 10 уровням — от «Зевка» до «Идеального».','#b6ff00'],
+['puzzle','Задачи','100 задач: мат в 1, мат в 2 и выигрыш материала. Есть подсказки, решённые задачи помечаются.','#ffa600'],
+['dice-ai','Кости против ИИ','Кубик выбирает фигуру: 1 пешка, 2 конь, 3 слон, 4 ладья, 5 ферзь, 6 король. Побеждает тот, кто съест короля.','#7d5fff'],
+['dice-pvp','Кости 1 на 1','Та же игра с костью для двоих на одном экране. Нет ходов нужной фигурой — ход пропускается.','#ff4d6d']].forEach(([id,t,d,c])=>{const e=document.createElement('div');e.className='c';e.style.setProperty('--k',c);e.innerHTML=`<h3>${t}</h3><p>${d}</p><div><button class="b">▶ 2D</button><button class="b">▶ 3D</button></div>`;
+ e.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{$('#md').value=id;setDim(i+2);vis();newGame();$('#play').scrollIntoView()});$('#mc').append(e)});
+ap();refH();refP();vis();setDim(2);newGame();
+</script></body></html>
