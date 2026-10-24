@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON DASH — неоновая 2D-игра</title>
+<style>
+:root{--a:#00ffff;--b:#ff00ff;--c:#ffee00;--bg:#07010f;--p:var(--p)}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#f0f var(--p)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:var(--p)}::-webkit-scrollbar-thumb{background:linear-gradient(#0ff,#f0f);border-radius:8px}::-webkit-scrollbar-corner{background:var(--p)}
+html{font-size:16px}body{margin:0;background:radial-gradient(circle at 20% 0,#2a0a4a,var(--bg) 60%) fixed;color:#e8e8ff;font:1rem/1.55 system-ui,Segoe UI,sans-serif;min-height:100vh}
+header{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:#07010fe6;border-bottom:2px solid var(--b);box-shadow:0 0 18px var(--b)}
+.logo{margin:0;font:900 1.7rem Impact,system-ui;letter-spacing:2px;color:var(--a);text-shadow:0 0 12px var(--a)}.logo span{color:var(--b);text-shadow:0 0 12px var(--b)}
+nav{display:flex;flex-wrap:wrap;gap:.4rem}
+button,select,input[type=color]{font:inherit;color:#fff;background:#1b0933;border:2px solid var(--a);border-radius:10px;padding:.35rem .8rem;cursor:pointer;transition:.15s;box-shadow:0 0 8px #0ff5}
+button:hover,select:hover{background:var(--a);color:#000;box-shadow:0 0 16px var(--a)}button.on{background:var(--b);border-color:var(--b);box-shadow:0 0 14px var(--b)}
+button.big{font-size:1.4rem;padding:.7rem 1.6rem;border-color:var(--c);box-shadow:0 0 14px var(--c);font-weight:800}button.big:hover{background:var(--c)}
+main{max-width:1200px;margin:auto;padding:1rem}.tab{display:none}.tab.on{display:block}
+h2{color:var(--c);text-shadow:0 0 10px var(--c);margin:.3rem 0 .8rem}
+#stage,#estage{position:relative;aspect-ratio:16/9;max-height:76vh;width:100%;border:3px solid var(--a);border-radius:14px;overflow:hidden;box-shadow:0 0 25px var(--a),inset 0 0 25px #0ff4;background:#000;touch-action:none}
+canvas{width:100%;height:100%;display:block}
+#ov{position:absolute;inset:0;display:flex;flex-direction:column;gap:.8rem;align-items:center;justify-content:center;background:#07010fb8;text-align:center;padding:1rem}
+#ov h1{font:900 clamp(2rem,7vw,4.5rem) Impact,system-ui;margin:0;color:var(--a);text-shadow:0 0 20px var(--a),0 0 40px var(--b)}
+.bar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.6rem 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.8rem}
+.card{padding:.8rem;border-radius:12px;background:linear-gradient(135deg,#1b0933,#0a1840);border:2px solid var(--h,#0ff);box-shadow:0 0 12px var(--h,#0ff);cursor:pointer;transition:.15s}
+.card:hover{transform:translateY(-4px) scale(1.03)}.card b{font-size:1.1rem}.card small{display:block;opacity:.8}
+.pr{height:7px;background:#000;border-radius:5px;margin-top:.4rem;overflow:hidden}.pr i{display:block;height:100%;background:linear-gradient(90deg,#0ff,#f0f,#ff0)}
+.pal{display:flex;gap:1.1rem;overflow-x:auto;align-items:flex-start;padding-bottom:.5rem;margin:.6rem 0}.pg{flex:none;padding-right:1.1rem;border-right:1px solid var(--a)}.pg:last-child{border:0}.pg h4{margin:0 0 .35rem;color:var(--c);font-size:.9rem;position:sticky;left:0}.pb{display:grid;grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:.35rem}.pal button{padding:.15rem .5rem;font-size:.85rem;border-color:var(--k);white-space:nowrap}.pal button.on{background:var(--k);color:#000}
+.st{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.6rem}.st div{display:flex;justify-content:space-between;padding:.5rem .8rem;background:var(--p);border-left:4px solid var(--b);border-radius:8px}.st b{color:var(--a)}
+.set{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem}.set label{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.5rem .8rem;background:var(--p);border:1px solid #f0f5;border-radius:8px}.set input[type=range]{width:120px;accent-color:#f0f}.set input[type=checkbox]{width:22px;height:22px;accent-color:#0ff}
+article{padding:.9rem 1.1rem;margin:.7rem 0;background:color-mix(in srgb,var(--p) 80%,transparent);border-left:4px solid var(--c);border-radius:10px}article h3{margin:.1rem 0;color:var(--a)}
+.toc{display:flex;flex-wrap:wrap;gap:.4rem}.toc a{color:var(--b);text-decoration:none;border:1px solid var(--b);border-radius:8px;padding:.1rem .5rem;font-size:.85rem}.toc a:hover{background:var(--b);color:#000}
+.tag{display:inline-block;padding:0 .5rem;margin:.1rem;border-radius:6px;font-size:.8rem;border:1px solid}
+.ew{display:grid;grid-template-columns:1fr 20px;gap:6px}.sb{background:var(--p);border:1px solid #f0f6;border-radius:8px}.sb.h{overflow-x:auto;overflow-y:hidden;height:22px}.sb.v{overflow-y:auto;overflow-x:hidden;contain:size}#hsi{height:1px}#vsi{width:1px}#stage:fullscreen{max-height:none;aspect-ratio:auto;height:100%;border-radius:0}#md{display:none;position:fixed;inset:0;z-index:50;background:#000b;align-items:center;justify-content:center;text-align:center}#md>div{background:var(--p);border:2px solid var(--b);box-shadow:0 0 25px var(--b);padding:1.5rem;border-radius:14px;max-width:90vw}
+#pad{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:.6rem;pointer-events:none}#pad div{display:flex;gap:.5rem}#pad button{pointer-events:auto;font-size:1.6rem;width:3.4rem;height:3.4rem;opacity:.75;touch-action:none;user-select:none;padding:0}
+.rv{min-width:2.2rem;text-align:right;color:var(--a);font-size:.9rem}.sw{display:flex;align-items:center;gap:.4rem}
+footer{text-align:center;opacity:.6;padding:1.5rem;font-size:.85rem}
+@media(max-width:640px){.logo{font-size:1.2rem}button{padding:.3rem .5rem}#stage,#estage{aspect-ratio:4/3}}
+#mg{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}#mg button{white-space:nowrap}
+</style></head><body>
+<header><h1 class="logo">NEON<span>DASH</span></h1><nav id="nav"></nav></header>
+<main>
+<section id="t-play" class="tab on"><div id="stage"><canvas id="cv"></canvas><div id="ov"></div><div id="pad"><div><button data-k="l">◀</button><button data-k="r">▶</button></div><div><button data-k="u">▲</button><button data-k="d">▼</button></div></div></div>
+<div class="bar"><button id="bp">⏸ Пауза</button><button id="br">↻ Рестарт</button><button id="bm">☰ Уровни</button><button id="bpr">🎯 Практика</button><button id="bcp">📍 Чекпоинт</button><button id="bdc">✖ Убрать</button><button id="bmu">🎵 Музыка</button><button id="bfs">⛶ Экран</button><label style="display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap">♪ Трек:<select id="trk"></select></label><span id="info" style="opacity:.8"></span></div>
+<p style="opacity:.75">Управление: <b>Пробел / ↑ / W / клик / касание</b> — действие, <b>Esc/P</b> — пауза, <b>R</b> — рестарт, <b>T</b> — практика, <b>Z/X</b> — поставить/убрать чекпоинт. В режиме платформера: <b>← → ↑ ↓ / A D W S</b> или экранные стрелки (если ничего не нажато, иконка стоит на месте). Все клавиши — во вкладке «О игре».</p></section>
+<section id="t-lvl" class="tab"><h2>40 обычных уровней</h2><div id="lg" class="grid"></div><h2 style="margin-top:1.5rem">20 уровней платформера</h2><div id="lp" class="grid"></div><h2 style="margin-top:1.5rem">Мои уровни</h2><div id="mg" class="grid"></div><p><button id="mnew">➕ Новый уровень</button></p></section>
+<section id="t-ed" class="tab"><h2>Редактор уровней</h2>
+<div class="bar"><span>Уровень:</span><select id="elv"></select><button id="enew">➕ Новый</button><button id="eren">✎ Имя</button><button id="edup">⧉ Копия</button><button id="edel">🗑 Удалить</button><span>Режим:</span><select id="epf"><option value="0">Обычный</option><option value="1">Платформер</option></select></div>
+<div class="bar"><button id="etest" class="big">▶ Тест</button><button id="eund">↶</button><button id="ered">↷</button><button id="eclr">🗑 Очистить</button><button id="eex">⚡ Пример</button><button id="eera">🧽 Ластик</button><button id="epan">✋ Пан</button><button id="ezo">➖</button><b id="ezl">100%</b><button id="ezi">➕</button><button id="ezf">⤢ Весь уровень</button><button id="ezr">1:1</button><span style="white-space:nowrap"><button id="ebp" title="Предыдущий фон">◀</button> <b id="ebn">Фон 1</b> <button id="ebx" title="Следующий фон">▶</button></span><button id="ehd">👁 Декор: виден</button><span id="ecnt"></span></div>
+<div class="ew"><div id="estage"><canvas id="ec"></canvas></div><div class="sb v" id="vs"><div id="vsi"></div></div><div class="sb h" id="hs"><div id="hsi"></div></div><div></div></div><div class="pal" id="pal"></div>
+<p style="opacity:.75">Режим уровня (обычный / платформер) выбирается списком «Режим». ЛКМ — ставить (можно вести мышью), ПКМ — стереть, колесо — прокрутка, Ctrl+колесо — масштаб, СКМ/Shift+drag/«Пан» — перетаскивание. Порталы высотой в 3 клетки. Телепорты связываются парами в порядке установки. Автосохранение.</p></section>
+<section id="t-st" class="tab"><h2>Статистика</h2><div class="st" id="st"></div><p><button id="rst">⚠ Сбросить всю статистику</button></p></section>
+<section id="t-se" class="tab"><h2>Настройки</h2><div class="set" id="se"></div><p><button id="rse">Сбросить настройки</button></p></section>
+<section id="t-ab" class="tab"><h2>Описание игры</h2><div class="toc" id="toc"></div><div id="ab"></div><h2 style="margin-top:1.5rem">⌨ Горячие клавиши</h2><div class="st" id="hk"></div></section>
+</main><div id="md"><div><p id="mdt"></p><input id="mdi" style="display:none;margin:.5rem 0;padding:.4rem;border-radius:8px;border:2px solid var(--a);background:var(--p);color:#fff;font:inherit;width:100%"><br><button id="mdy" class="big">Да</button> <button id="mdn">Отмена</button></div></div><footer>NEON DASH · одиночный офлайн HTML-файл · Всё хранится локально в вашем браузере</footer>
+<script>
+const $=s=>document.querySelector(s),U=30,CH=330,NL=60;
+const MN=['Куб','Корабль','Шар','НЛО','Волна','Робот','Паук','Свингкоптер'],MC=['#33ff33','#ff55dd','#ff3333','#ff9900','#00ffff','#ffffff','#aa44ff','#ffff00'];
+const SPD=[.7,.85,1,1.25,1.55,1.9],SN=['Синяя −2','Жёлтая −1','Голубая 1','Зелёная 2','Розовая 3','Красная 4'],SC=['#3388ff','#ffee00','#00ffff','#33ff33','#ff66cc','#ff2222'];
+const PN=['Жёлтый','Голубой','Розовый','Зелёный','Красный','Чёрный','Фиолетовый','Синий','Оранжевый','Белый'],PC=['#ffee00','#00e5ff','#ff66cc','#22ff44','#ff2222','#888888','#aa33ff','#2050ff','#ff9900','#ffffff'];
+const PE=['средний прыжок','быстрая смена гравитации','малый прыжок','постепенная смена гравитации','большой прыжок','притяжение без смены гравитации','мгновенная смена гравитации','начало телепортации','конец телепортации','самый большой прыжок'];
+const DEF={b:{n:'Блок',c:'#00ffff'},B:{n:'Светящийся блок',c:'#ffe14d'},s:{n:'Шип ▲',c:'#ff3366'},S:{n:'Шип ▼',c:'#ff3366'},l:{n:'Шип ◀',c:'#ff3366'},r:{n:'Шип ▶',c:'#ff3366'},eu:{n:'Светящийся шип ▲',c:'#ff7bff'},ed:{n:'Светящийся шип ▼',c:'#ff7bff'},el:{n:'Светящийся шип ◀',c:'#ff7bff'},er:{n:'Светящийся шип ▶',c:'#ff7bff'}};
+['◣','◢','◤','◥'].forEach((g,n)=>{DEF['w'+n]={n:'Треугольник '+g,c:'#00ffff'};DEF['W'+n]={n:'Светящийся треугольник '+g,c:'#b7ff4d'}});
+['◣','◢','◤','◥'].forEach((g,n)=>{DEF['c'+n]={n:'Закруглённый треугольник '+g,c:'#00ffff'};DEF['C'+n]={n:'Светящийся закруглённый треугольник '+g,c:'#b7ff4d'}});
+MN.forEach((n,i)=>DEF['m'+i]={n:'Портал: '+n,c:MC[i]});
+Object.assign(DEF,{g1:{n:'Антигравитация',c:'#ffee00'},g0:{n:'Обычная гравитация',c:'#00ffff'},d0:{n:'Движение назад',c:'#ff9900'},d1:{n:'Движение вперёд',c:'#3388ff'},z1:{n:'Увеличение',c:'#33ff33'},z0:{n:'Уменьшение',c:'#ff66cc'},u1:{n:'Раздвоение',c:'#ffffff'},u0:{n:'Объединение',c:'#6666aa'},t0:{n:'Телепорт: начало',c:'#ff2222'},t1:{n:'Телепорт: конец',c:'#aa44ff'}});
+SN.forEach((n,i)=>DEF['v'+i]={n:'Скорость '+n,c:SC[i]});
+PC.forEach((c,i)=>{DEF['p'+i]={n:'Джамппад '+PN[i]+': '+PE[i],c};DEF['o'+i]={n:'Орб '+PN[i]+': '+PE[i],c}});
+DEF.a0={n:'Дэш-орб Зелёный: прямо вперёд, без смены гравитации',c:'#22ff44'};DEF.a1={n:'Дэш-орб Розовый: прямо вперёд, гравитация меняется после отпускания',c:'#ff66cc'};
+const GL={g1:'↑',g0:'↓',d0:'«',d1:'»',z1:'+',z0:'−',u1:'⇅',u0:'▪',t0:'⇥',t1:'⇤'};
+const MG=['■','▲','●','◖','◢','▣','✱','✚'],VG=['−2','−1','1','2','3','4'];
+const SD=[['mus','Фоновая музыка','c',1],['mv','Громкость музыки','r',60,0,100],['sfx','Звуковые эффекты','c',1],['sv','Громкость эффектов','r',70,0,100],['gs','Скорость игры, %','r',100,50,150],['fps','Показывать FPS','c',0],['hb','Показывать хитбоксы','c',0],['pt','Частицы','c',1],['tr','След игрока','c',1],['tl','Длина следа, кадров','r',22,6,60],['hm','HUD: режим и скорость','c',1],['sh','Тряска экрана','c',1],['gl','Неоновое свечение','c',1],['bg','Фон: номер узора (0–29 = №1–30)','r',0,0,29],['pr','Режим практики','c',0],['ar','Мгновенный рестарт','c',0],['pb','Полоса прогресса','c',1],['at','Показывать попытки','c',1],['pc','Показывать проценты','c',1],['fl','Вспышка при смерти','c',1],['bf','Буфер клика, мс','r',90,0,200],['nc','Неуязвимость','c',0],['mi','Зеркальный экран','c',0],['cc','Цвет иконки','k','#00ffcc'],['tc','Цвет следа','k','#ff00ff'],['ui','Масштаб интерфейса, %','r',100,80,130],['pa','Автопауза при потере фокуса','c',1],['ed','Сетка в редакторе','c',1],['cs','Плавность камеры','r',50,0,100],['dpr','Качество (DPR)','r',2,1,3],['acp','Авто-чекпоинты в практике','c',1],['ci','Интервал авто-чекпоинтов, с','r',2,1,10],['ua','Интерфейс: основной цвет','k','#00ffff'],['ub','Интерфейс: акцентный цвет','k','#ff00ff'],['uc','Интерфейс: цвет заголовков','k','#ffee00'],['up','Интерфейс: цвет панелей','k','#12041f'],['hc','HUD: цвет текста','k','#ffffff'],['pbc','HUD: цвет полосы прогресса','k','#00ffff'],['cpc','Цвет чекпоинтов практики','k','#7cff00'],['dc','Цвет частиц смерти','k','#00ffcc'],['oc','Цвет контура иконки','k','#ffffff'],['gu','Свой цвет линий пола и потолка','c',0],['gc','Цвет линий пола и потолка','k','#00ff99'],['gf','Цвет заливки за полом','k','#050515'],['xb','Цвет блоков','k','#00ffff'],['xB','Цвет светящихся блоков','k','#ffe14d'],['xs','Цвет шипов','k','#ff3366'],['xe','Цвет светящихся шипов','k','#ff7bff'],['xw','Цвет треугольных блоков','k','#00ffff'],['xW','Цвет светящихся треугольников','k','#b7ff4d'],['bu','Свой цвет фона','c',0],['bk','Цвет фона','k','#2a0a4a'],['pu','Свой цвет узора фона','c',0],['bc','Цвет узора фона','k','#66ffff'],['xd','Цвет декоративных блоков','k','#8888ff'],['xD','Цвет светящихся декоративных блоков','k','#ff88ff']];
+const ST=[['att','Попыток'],['dth','Смертей'],['jmp','Прыжков'],['clk','Кликов'],['win','Прохождений'],['lv','Пройдено обычных уровней (из 40)'],['lp','Пройдено уровней платформера (из 20)'],['tm','Время в игре'],['dst','Пройдено блоков'],['orb','Орбов активировано'],['pad','Джамппадов'],['prt','Порталов режима'],['spd','Смен скорости'],['grv','Смен гравитации'],['dual','Раздвоений'],['tp','Телепортаций'],['dsh','Дэшей активировано'],['dtm','Время в полёте дэша'],['big','Самых больших прыжков'],['tpo','Телепортаций через пады и орбы'],['sz','Смен размера'],['dir','Зеркальных разворотов'],['obj','Объектов построено'],['edt','Тестов своих уровней'],['best','Лучший % попытки'],['spk','Смертей на шипах'],['blk','Смертей на блоках'],['prc','Чекпоинтов в практике'],['prw','Побед в практике'],['lvn','Создано уровней'],['edl','Стёрто объектов'],['und','Отмен в редакторе'],['zm','Изменений масштаба'],['cwin','Побед на своих уровнях'],['cdth','Смертей на своих уровнях'],['pdth','Смертей в практике'],['mxp','Макс. чекпоинтов за забег'],['pfa','Попыток в платформере'],['pfd','Смертей в платформере'],['pfw','Побед в платформере'],['pft','Время в платформере'],['lk','Время нажатия «влево»'],['rk','Время нажатия «вправо»'],['dk','Время нажатия «вниз»'],['pfn','Создано уровней платформера'],['dec','Декоративных блоков поставлено'],['cch','Изменений цвета'],['bgc','Смен фона'],...MN.map((n,i)=>['t'+i,'Время: '+n])];
+let S={st:{},set:{},best:{},done:{},cust:[],trk:0};try{Object.assign(S,JSON.parse(localStorage.getItem('neondash')||'{}'))}catch(e){}
+const set=S.set;SD.forEach(d=>{if(set[d[0]]===undefined)set[d[0]]=d[3]});
+if(!S.lvs)S.lvs=[{name:S.cust&&S.cust.length?'Мой уровень':'Уровень 1',o:S.cust||[]}];delete S.cust;S.ci=Math.max(0,Math.min(S.ci|0,S.lvs.length-1));S.lvs.forEach(l=>l.o.forEach(o=>{if('mgdzutv'.includes(o.t[0])&&o.h==11)o.h=3}));
+let svT;const sv=()=>{clearTimeout(svT);svT=setTimeout(()=>{try{localStorage.setItem('neondash',JSON.stringify(S))}catch(e){}},400)};
+const inc=(k,n=1)=>{S.st[k]=(S.st[k]||0)+n;sv()};
+/*
+ NEON DASH — краткая справка (комментарий, на игру не влияет)
+ Сохранение: localStorage, JSON {st, set, best, done, lvs, ci, trk}.
+ Настройка: добавьте строку в SD [ключ, подпись, 'c'|'r'|'k', значение, мин, макс].
+ Раздел описания: добавьте пару [заголовок, текст] в DOC.
+ Коды объектов: b/B блок; s S l r eu ed el er шипы; w0-3/W0-3 скаты;
+ c0-3/C0-3 закруглённые скаты; m0-7 режимы; g1 g0 гравитация; d0 d1 направление;
+ z1 z0 размер; u1 u0 раздвоение; t0 t1 телепорт; v0-5 скорости; p0-9 пады;
+ o0-9 орбы (7 синий — начало телепорта, 8 оранжевый — конец, 9 белый — рекорд прыжка);
+ a0 зелёный дэш, a1 розовый дэш (после отпускания меняет гравитацию); qa.. Qa.. декор.
+ Физика: фиксированный шаг 1/240 с, время масштабируется настройкой скорости игры.
+ Палитра редактора: четыре группы по 3 строки с общей горизонтальной прокруткой.
+*/
+/* ---------- audio ---------- */
+let AC,mg,sg,nt=0,ms=0;
+const TR=[{n:'Neon Pulse',b:128,r:55,sc:[0,3,5,7,10],p:[0,0,5,3]},{n:'Cyber Rush',b:140,r:49,sc:[0,2,3,7,8],p:[0,3,0,7]},{n:'Laser Night',b:150,r:55,sc:[0,4,7,9,12],p:[0,5,7,5]},{n:'Plasma Drive',b:160,r:46,sc:[0,3,6,7,10],p:[0,0,3,6]},{n:'Hyper Storm',b:174,r:41,sc:[0,1,5,7,8],p:[0,1,0,8]},{n:'Calm Grid',b:100,r:58,sc:[0,2,4,7,9],p:[0,7,5,4]}];
+function ac(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();mg=AC.createGain();sg=AC.createGain();mg.connect(AC.destination);sg.connect(AC.destination)}if(AC.state=='suspended')AC.resume();vol()}
+function vol(){if(AC){mg.gain.value=set.mus?set.mv/100*.5:0;sg.gain.value=set.sfx?set.sv/100:0}}
+function note(f,t,d,ty,g,dst,f2){const o=AC.createOscillator(),e=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);e.gain.setValueAtTime(g,t);e.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(e);e.connect(dst);o.start(t);o.stop(t+d+.02)}
+function sfx(k){if(!AC||!set.sfx)return;const t=AC.currentTime;if(k=='j')note(500,t,.09,'square',.15,sg,800);else if(k=='o')note(900,t,.15,'triangle',.3,sg,1500);else if(k=='p')note(300,t,.2,'sawtooth',.2,sg,900);else if(k=='t')note(200,t,.25,'sine',.3,sg,1200);else if(k=='d')note(300,t,.4,'sawtooth',.35,sg,40);else if(k=='w')[0,4,7,12].forEach((n,i)=>note(440*2**(n/12),t+i*.1,.3,'square',.15,sg));else note(700,t,.06,'square',.1,sg)}
+setInterval(()=>{if(!AC||!set.mus||AC.state!='running')return;const tr=TR[S.trk||0],sd=60/tr.b/4;if(nt<AC.currentTime)nt=AC.currentTime+.05;while(nt<AC.currentTime+.25){const i=ms++,t=nt;if(i%4==0)note(130,t,.16,'sine',.7,mg,40);if(i%2==0)note(tr.r*2**(tr.p[(i>>3)%tr.p.length]/12),t,sd*1.8,'sawtooth',.28,mg);if(i%2==1)note(tr.r*4*2**(tr.sc[(i*3>>1)%tr.sc.length]/12),t,sd*1.5,'square',.09,mg);if(i%2==1)note(8000,t,.03,'square',.03,mg);nt+=sd}},60);
+/* ---------- level generation ---------- */
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const LA=['Neon','Cyber','Pulse','Laser','Plasma','Turbo','Hyper','Quantum','Solar','Lunar'],LB=['Rush','Dash','Wave','Storm','Drive','Beat','Rift','Core','Flow','Gate'],DN=['Лёгкий','Нормальный','Сложный','Очень сложный','Безумный','Демон','Экстрим'];
+const LC={};
+const GM={a:0,b:0,c:0,d:0,e:0,f:0,g:0,h:0,i:0,j:0,k:0,T:0,r:5,S:1,Z:1,O:2,U:3,Y:3,W:4,X:4,P:6,Q:7};
+const GF={s:'S',S:'s',eu:'ed',ed:'eu',w0:'w2',w2:'w0',w1:'w3',w3:'w1',W0:'W2',W2:'W0',W1:'W3',W3:'W1'};
+const GR=["c1b0c0a0c0a1b0a1","b2a2d0a3c1d3c0d1","a2S2c4S1c1b2S3a2","c2W4c3W4a1b2c4b1c3","b2c1a2W3U3c1W3U1a3","b2e3d3W2e1W2S2e3b4d3","b2W2g3T1Z4W3T4g3W2b3","b2g1T1g3b1T4e2Z1T2W3","d2O2g3Z3d1Z3O3Z3O3U3g2","d1c4f4c3O2d3c2Z4O3Z2O3","d1c1X4r3X4c1X4Y1d2f3Y2e4","b2X2T1X1r2X4i2X1r3X1Y3r3","c2Y3P2Z2Y1P2Y3P1i2Y2P4Y1P1","b2h3j2P1j4Q3i2P1j2h3j4h3b3","a1r4i4h1j2W1a1j2e1j1a1j2h3","d2a3T1O3T1O2h3O3h1Q1T2k1h2k3","b2k3O3r2b1P1Q2k3j3Q3j3k2P4O2","c2b3k4f3k2f2Q3k2c2k2j4P3j2Z3j2","c2b4S3k4Z2r4S3X2c3k4b3k2Y3r2k4","b2U3X4U2b4Z2g3X4g3X3h2b4U2g2b3","a2k4c3g5Q3O3k5W4c4Y3g4d2a5Q2k4a3","d2j2T2f3T2k3f4d3i3f2X4S4j5d4i4k2","d2P4Z3d5Z3W2P3Z4W4d2Z4k3W2d4Z4Q3P4","b2W4b2Y3T3W2b3g3X4g3d5g2X4d3T2r2b3","c2Q3d4g2W3d4f4X2f2c2g2X4Q3i4d2f4W2c2","d2Q2d4P2Q3U3a5Z4P2d5i4j3P4Z3a5d2a4i2","b2Y3j4U3e4Y2b5U3W2T2W4i4d3b3g4T3i4g4","b2e4T4P2Q3P4b4T2Q3b5Y2c3d2c3e4g5c3P4e3","a2c2T3c3O3S4T3d3T5c2S3d5j3S3O3W2S3h3j4","d2b5r3b4f3d4r3Z4h2T3Q3Z2j3f4h2r3Q3T5P2h4","c2W3k3Q3P2e3P4c3e3r3W4f4W4T2i4f4T2i4c5k4","g2r4f4Y3f4g4i3g2S2h3Y3h2g3S3f3Y3W4S4h3S3h4","d2k5e2O3Y3i4e4Y3O2r2Y3O3g5k5e3Y3f4e2Y3f2e2","d2k5h4W4U3h4X4k5r4d3h4U3X4b3k5b4X4r4U3X4b5","c2W3X3f4d3W3c4d5W4T4c3X4S3W3d4X4O3X4e4O3d3Z4","c2g4a5Z4b3P4e5Z3c3d5a4Z4d3W4r3P4a4g3P3b3r3O3","c2U3d4k4g4S3g4T5h4g3S4Y3U3k5g5T5j3Y3f4X4h3d3X3","a2P3S4U3g4Y3O3i4O3Y3Q3P4Q3r4i3Q3r3O3Y3k3O3U3P4","b2U3d3f4Y3S4Q3W4Y3f4r3g4b3f4g3W4b3g3S3i4W4g5T5","b2a4g3e3Y3O3g3Y3a4i3U3a5Y3W3j5O3b3a5e5c3W4O3g4a5","c2g5c2g5U3g5e5U2","a2Z4r3a4r4f2Y3a2","b2X3r4Y3f4X3r4Y3X3","Y2i4P2i4Y3i3P2Y3i4","j2i2h3X4h4j3i4g5i4g5","d2h4X2j3h4W4h2X3W3j5","k2f3Q2i4U3k4f4k2h3Q3f4","T2j4T2k4j4k5P4Q2T2k4Z4","c2Y3f4T5U3f4X3U3P4T5P3j5","d2r4W4T5W4j3W4g3T3P3c4P3","b2a5W4Y3a4b5j3X3j3W4O3Q3Y3","b2d5g5k5g5b5d5g3Y3S4P4Q3k4P3","d2Y3k5W4O3k4X4b3X4O3Q3b3O3Q3","d2U3X3T4g3T5g5X3f3k5T5k4d5X4U3","c2r4T3e4T3P3f4P4O3X3P3T4P4O3S3","b2k5g4P3Y3h4j4Q3X4P4k3h4Q3h4i4j5","c2Q3T4c5f3T5S3W3Q3d4O3T5W3j4W4i4","d2e5Q3d4X4h4d5Q3c4U3e5Y3f4k4X4e4i4","d2W4a4Z4k4P4W4T5k5a5Z4P4Z4P4Z4O3a4","W2k4W4f4Z4e5k4f4Z4O3P4f4e4P4f4i4X4Z4"];
+function gen(I){if(LC[I])return LC[I];const rec=GR[I];
+const pf=I>=40,D=pf?(I-40)/19:I/39,r=rng(I*7919+13),o=[],md=new Set([0]);
+let fl=0,sp=2,cm=0,f=1,k=D;
+const mx=Math.max,mn=Math.min,rd=Math.round,sq=Math.sqrt,cl=Math.ceil,fo=Math.floor,pick=a=>a[r()*a.length|0],ri=(a,b)=>a+(r()*(b-a+1)|0);
+const A=(t,xx,y,w=1,h=1)=>{if(fl){y=11-y-h;t=GF[t]||t}o.push({t,x:xx,y,w,h})},P=(t,xx,y=0)=>A(t,xx,y,1,3);
+const gl=()=>k>.25&&r()<.3,bt=()=>gl()?'B':'b',sS=()=>gl()?'eu':'s';
+const T=()=>4.5*f,mw=()=>mx(1,fo(4.12*f-.8-(1-k)*.6)),gp=()=>cl(.55*T()+1.1+.4*f)+rd((1-k)*2*r());
+const spk=(u,n)=>{for(let j=0;j<n;j++)A(sS(),u+j,0)};
+const SC={
+a(x,L){let u=x+6;for(;u<x+L-6;){const q=r();let w=1;
+if(q<.25)spk(u,1);
+else if(q<.5){w=ri(1,mw());spk(u,w)}
+else if(q<.75){const b=ri(1,2),n=ri(1,mn(2,mw()));A('b',u,0,b,1);spk(u+b,n);w=b+n}
+else{spk(u,1);A('b',u+1,0,1,1);spk(u+2,1);w=3}
+u+=w+gp()}return mx(x+L,u)+cl(T())},
+b(x,L){const Jd=(h1,h2)=>10.33*f*(600+sq(360000-5500*(h2-h1)))/2750;
+let h=30,l=x+7;let sx=x+6,pend=x+9;
+while(l<x+L-8){const nh=k>.3&&r()<.4?60:30,J=Jd(h,nh),a=mx(0,mn(1,J-2.2))*r(),nl=l+J,S=nl-a;
+const E=mx(l+1.2,mn(l+1+ri(1,2)+(f>1.2),S-1.2));pend=mx(pend,E);
+o.push({t:'b',x:sx,y:0,w:E-sx,h:h/30});spk(Math.ceil(E),Math.floor(S)-Math.ceil(E));
+sx=S;l=nl;h=nh}
+const J=Jd(h,0),E=l+1+ri(1,2);o.push({t:'b',x:sx,y:0,w:E-sx,h:h/30});const nl=l+J;spk(Math.ceil(E),Math.floor(nl-1.6)-Math.ceil(E));
+return nl+cl(T())},
+c(x,L){let u=x+6;for(;u<x+L-10;){const h=ri(1,2),pw=ri(1,3);
+for(let j=0;j<h;j++){A('w1',u+j,j);if(j)A('b',u+j,0,1,j)}
+A('b',u+h,0,pw,h);
+for(let j=0;j<h;j++){A('w0',u+h+pw+j,h-1-j);if(h-1-j)A('b',u+h+pw+j,0,1,h-1-j)}
+if(r()<.6)A(sS(),u+h+ri(0,pw-1),h);
+u+=2*h+pw+gp();spk(u,ri(0,1)*ri(1,mw()));u+=gp()}
+return mx(x+L,u)+cl(T())},
+d(x,L){const AR={0:6.77,2:4.7,4:8.9};
+let u=x+6;for(;u<x+L-14;){const t=pick(f<.9?[4,0]:[0,2,4]),Pn=fo(AR[t]*f-3.5);if(Pn<1){u+=4;continue}
+A('p'+t,u,0,1,.3);spk(u+2,Pn);u+=2+Pn+gp()}
+return mx(x+L,u)+cl(T())},
+e(x,L){const OB={0:5.4,2:3.6,4:6.9,9:8.7},AI={0:6.2,2:4.75,4:7.75,9:9.2};
+let u=x+6;for(;u<x+L-16;){const n=ri(1,k>.5?4:3);let ox=u+2,tp=pick([0,2,4]);const ob=[];
+for(let j=0;j<n;j++){ob.push([ox,tp]);ox+=OB[tp]*f;tp=pick([0,2,4])}
+const l=ob[n-1],pe=fo(l[0]+AI[l[1]]*f-2.2);
+for(const q of ob)A('o'+q[1],q[0],2);
+spk(u,pe-u);u=pe+gp()}
+return mx(x+L,u)+cl(T())},
+};
+SC.f=(x,L)=>{const E=ri(0,1),t1=pick([1,3,6]),t2=pick([1,3,6]),ex=cl(5.5*f)+2;
+E?A('p'+t1,x+2,0,1,.3):P('g1',x+2);
+fl=1;const e=SC[pick(['a','b','c'])](x+ex,L-ex);
+ri(0,1)?A('p'+t2,e,0,1,.3):P('g0',e);fl=0;return e+ex};
+SC.g=(x,L)=>{let u=x+6;for(;u<x+L-16;){const Dd=cl(T())+ri(3,6);A('a0',u+2,2);spk(u,Dd);A('b',u,5,Dd+3,6);u+=Dd+cl(2*f)+gp()}
+return mx(x+L,u)+cl(T())};
+SC.h=(x,L)=>{P('z0',x+2);let u=x+9;const e=x+L-10;
+while(u<e){const n=ri(1,mw()+1);spk(u,n);const w=u+n+cl(T())+4;A('b',w,.7,ri(1,2),10.3);u=w+3}
+P('z1',u);return u+cl(T())+3};
+SC.i=(x,L)=>{P('u1',x+2);let u=x+9;
+while(u<x+L-8){const q=r(),n=ri(1,mw());
+if(q<.35){spk(u,n);fl=1;spk(u,n);fl=0}else if(q<.7)spk(u,n);else{fl=1;spk(u,n);fl=0}
+u+=n+gp()}
+P('u0',u);return u+cl(T())};
+SC.j=(x,L)=>{P('d0',x+2);const e=SC[pick(['a','b','c','d','e'])](x+6,L-12);P('d1',e);return e+4};
+SC.k=(x,L)=>{let u=x+6;for(;u<x+L-14;){const v=ri(0,2),Pk=ri(8,16),e=u+2+Pk;
+if(v==0){P('t0',u);spk(u+2,Pk);P('t1',e)}
+else if(v==1){A('p7',u,0,1,.3);spk(u+2,Pk);A('p8',e,0,1,.3)}
+else{A('o7',u+2,2);spk(u,Pk+2);A('o8',e,2)}
+spk(e+6,ri(1,mw()));u=e+6+gp()+2}
+return mx(x+L,u)+cl(T())};
+SC.T=(x,L)=>{let u=x+6;for(;u<x+L-16;){const h=ri(2,4),t=h<3?0:4,d=t?cl(2*f+1.7*(h>3)):cl(1.2*f+.6);
+A('p'+t,u,0,1,.3);const w=ri(1,2);A('b',u+d,0,w,h);if(h<4&&r()<.5)A(sS(),u+d,h);
+const AR=t?8.9:6.77,Pn=fo(AR*f-d-w-3);if(Pn>2)spk(u+d+w,Pn-1);u+=d+w+mx(Pn,0)+gp()}
+return mx(x+L,u)+cl(T())};
+SC.r=(x,L)=>{let u=x+6,hp=0;const gm=mx(1,fo(3.9*f-1.5));A('b',u,0,2,1);u+=2;hp=1;
+while(u<x+L-8){const g=ri(1,gm),w=ri(1,3),h=mn(3,hp+ri(-1,1)<1?1:mn(hp+ri(-1,2),3));spk(u,g);u+=g;A('b',u,0,w,h);u+=w;hp=h}
+return u+cl(T())+2};
+const corr=(x0,m,L)=>{const W=m==4?rd(6-k*1.5):m==1?rd(7-k*2.5):rd(7-k*2),sl=cl(3.5*f+2),st=[];let fh=0,top=3;
+while(top-fh<W){top++;st.push([fh,top])}
+const ns=mx(4,rd(L/sl));for(let i=0;i<ns;i++){if(r()<.6){const nf=fh+(r()<.5?1:-1);if(nf>=0&&nf+W<=11){fh=nf;top=nf+W}}st.push([fh,top])}
+while(fh>0||top>3){if(fh>0){fh--;top--}else top--;st.push([fh,top])}
+let u=x0,pf2=0,pt=3;const ss=k>.15&&r()<.7;
+for(const[f2,t2]of st){if(f2>0)A(bt(),u,0,sl,f2);if(t2<11)A(bt(),u,t2,sl,11-t2);
+if(ss){if(f2>pf2)A(gl()?'W1':'w1',u-1,pf2);if(f2<pf2)A(gl()?'W0':'w0',u,f2);if(t2<pt)A(gl()?'W3':'w3',u-1,t2);if(t2>pt)A(gl()?'W2':'w2',u,pt)}
+if(m!=4&&W>=5&&k>.1&&r()<.5){if(f2>0&&f2>pf2&&!ss)A('s',u+sl-1,f2);if(t2<11&&t2<pt&&!ss)A('S',u+sl-1,t2-1)}
+pf2=f2;pt=t2;u+=sl}return u};
+const gates=(x0,m,L)=>{const W=m==4?rd(5.4-k*1.2):m==3?rd(6.4-k*1.4):rd(6-k*1.4),dm=m==4?2:m==3?2:3,
+s=cl(3+(m==4?3:m==3?4:3.5)*f);
+let u=x0+4,a=0;const e=x0+L;
+while(u<e){const pw=ri(1,2);if(a>0)A(bt(),u,0,pw,a);if(a+W<11)A(bt(),u,a+W,pw,11-a-W);
+if(k>.25&&r()<.4&&W>=5){if(a>0)A('s',u,a);else A('S',u,a+W-1)}
+let na=a+ri(-dm,dm);na=mx(0,mn(11-W,na));
+u+=pw+(Math.abs(na-a)>2?s:s-2);a=na}
+const pw=ri(1,2);A(bt(),u,W,pw,11-W);u+=pw+s;return u};
+const flips=(x0,m,L)=>{const R=m==2?7:m==6?7:8,sg=m==2?cl(2.5*f+2):m==6?cl(f+2):cl(2*f+2);let u=x0+8,hz=0,e=x0+L;const S=[];
+while(u<e){const n=ri(2,4);for(let j=0;j<n;j++){const w=ri(1,mn(2,mw())),bl=r()<.3;
+if(hz){if(bl)A('b',u,R-1,w,1);else{fl=0;A('S',u,R-1)}}else{if(bl)A('b',u,0,w,1);else A(sS(),u,0)}
+u+=w+ri(1,3)}
+u+=sg;hz^=1}
+if(!hz){hz=1}
+A('b',x0,R,u-x0+cl(6*f)+3,11-R);return u+cl(6*f)+3};
+const FLY={S:(x,L)=>gates(x,1,L),U:(x,L)=>gates(x,3,L),W:(x,L)=>gates(x,4,L),Z:(x,L)=>corr(x,1,L),Y:(x,L)=>corr(x,3,L),X:(x,L)=>corr(x,4,L),O:(x,L)=>flips(x,2,L),P:(x,L)=>flips(x,6,L),Q:(x,L)=>flips(x,7,L)};
+let x=14;
+for(let n=0;n<rec.length;n+=2){const kd=rec[n],s=+rec[n+1],nm=GM[kd];k=mn(1,D*(.6+.4*n/rec.length));
+const gd=m=>m==0||m==5,fly=!(gd(cm)&&gd(nm)),ns=s!=sp,xp=x+8;
+if(fly)A('b',x,3,xp+(ns?8:6)-x,8);
+if(nm!=cm)P('m'+nm,xp);
+if(ns){sp=s;P('v'+s,xp+3)}
+x=xp+(fly?(ns?8:6):4);f=SPD[sp];cm=nm;md.add(nm);
+const L=cl(10.33*f*(4.4+2.2*r()));
+x=(SC[kd]||FLY[kd])(x,L)}
+return LC[I]={o,end:x+10,hue:(I*47)%360,name:LA[I%10]+' '+LB[(I*3+(I/10|0))%10],md:[...md],df:pf?mn(5,(I-40)/4|0):mn(6,I/5|0),i:I,pf}
+}
+const custLevel=ci=>{const l=S.lvs[ci==null?S.ci:ci],o=l.o;return{o,end:Math.max(30,...o.map(q=>q.x+q.w))+12,hue:(S.lvs.indexOf(l)*53+280)%360,name:l.name,md:[],df:0,i:-1,pf:l.pf|0}};
+/* ---------- game ---------- */
+const cv=$('#cv'),cx=cv.getContext('2d'),ov=$('#ov');
+let G={L:null,i:-1,ps:[],sp:2,att:0,t:0,dead:0,dt:0,cam:0,acc:0,prt:[],flash:0,shake:0,pct:0,mx:0,cps:[],won:0,mir:0,mf:0,ci:0,paused:1,held:0,kl:0,kr:0,kd:0,pf:0,fps:0,lcp:0};
+const np=()=>({x:0,y:0,px:0,py:0,vy:0,g:1,m:0,sz:1,dir:1,ground:1,hit:new Set(),buf:0,rot:0,tr:[],rt:0,ds:0,ft:0});
+const cl=p=>({...p,hit:new Set(p.hit),tr:[]});
+function start(i,cu,ci){ac();G.ci=cu?(ci==null?S.ci:ci):0;G.L=cu?custLevel(G.ci):gen(i);G.i=cu?-1:i;G.cu=cu;G.pf=!!G.L.pf;G.L.s0=G.L.o.filter(o=>o.t=='p7'||o.t=='o7');G.L.s1=G.L.o.filter(o=>o.t=='p8'||o.t=='o8');G.L.t0=G.L.o.filter(o=>o.t=='t0');G.L.t1=G.L.o.filter(o=>o.t=='t1');idx(G.L);G.att=0;G.cps=[];G.won=0;G.mx=0;if(cu)inc('edt');tab('play');reset();G.paused=0;ov.style.display='none'}
+function reset(){G.acc=0;G.att++;inc('att');G.kl=G.kr=G.kd=0;if(G.pf)inc('pfa');G.ps=[np()];G.sp=2;G.dead=0;G.t=0;G.lcp=0;G.pct=0;G.prt=[];G.cam=-200;G.mir=0;G.mf=0;const c=set.pr&&G.cps[G.cps.length-1];if(c){G.ps=c.ps.map(cl);G.ps.forEach(p=>{p.buf=0;p.ds=0});G.sp=c.sp;G.pct=c.pct;G.mir=c.mir||0;G.mf=G.mir;G.lk=G.held?1:0;G.acc=0;G.cam=G.ps[0].x-(G.pf?.4:.28)*cv.width/(cv.height/400)}}
+function die(p,k){if(set.nc||G.dead)return;G.dead=1;G.dt=set.ar?.05:.7;inc('dth');inc(k=='s'?'spk':'blk');inc('dst',(G.ps[0].x/U)|0);if(!set.pr){S.st.best=Math.max(S.st.best||0,G.mx|0);if(G.i>=0)S.best[G.i]=Math.max(S.best[G.i]||0,G.mx|0);else if(G.cu&&S.lvs[G.ci])S.lvs[G.ci].best=Math.max(S.lvs[G.ci].best||0,G.mx|0)}if(G.cu)inc('cdth');if(G.pf)inc('pfd');if(set.pr)inc('pdth');sfx('d');if(set.fl)G.flash=1;if(set.sh)G.shake=.4;if(set.pt)for(let k=0;k<36;k++){const a=Math.random()*6.3,v=100+Math.random()*300;G.prt.push({x:p.x,y:p.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:.8,c:set.dc})}}
+function win(){G.paused=1;G.won=1;const pr=set.pr;inc(pr?'prw':'win');if(G.pf)inc('pfw');inc('dst',G.L.end|0);G.mx=100;if(!pr){if(G.i>=0){S.done[G.i]=1;S.best[G.i]=100}else if(G.cu&&S.lvs[G.ci]){S.lvs[G.ci].best=100;inc('cwin')}S.st.best=100}sfx('w');sv();ov.style.display='flex';ov.innerHTML=`<h1>${pr?'ПРАКТИКА ПРОЙДЕНА':'УРОВЕНЬ ПРОЙДЕН!'}</h1><p>${G.L.name} · попыток: ${G.att}${pr?' · в практике прогресс не засчитывается':''}</p><div><button class="big" onclick="start(${G.i},${G.cu?1:0},${G.ci})">↻ Заново</button> ${G.i>=0&&G.i<NL-1?`<button class="big" onclick="start(${G.i+1})">▶ Далее</button>`:''} <button class="big" onclick="tab('lvl')">☰ Уровни</button></div>`}
+function eff(p,n,k,o){const g=p.g;p.ds=0;if(n==0||n==2||n==4||n==9){p.vy=g*[720,0,500,0,950,0,0,0,0,1150][n]*k;p.ground=0;if(n==9)inc('big')}else if(n==5)p.vy=-g*750*k;else if(n==7){const d=G.L.s1[G.L.s0.indexOf(o)];if(d){p.x=d.x*U;p.y=Math.max(0,Math.min(CH-p.sz*U,d.y*U));p.vy=0;p.ground=0;p.tr=[];inc('tp');inc('tpo')}}else if(n==8){}else{p.g=-g;p.ground=0;p.vy=-p.g*[0,550,0,120,0,0,900][n]*k;inc('grv')}}
+const DG='■▪●◆✚★▲▬▮⁘⬢◎▶«▦≡▄▀▌▐◣▣〰▤'.split('');
+const DX=[['шип ▼'],['шип ◀'],['прямоугольный ◣'],['прямоугольный ◢'],['прямоугольный ◤'],['прямоугольный ◥'],['закруглённый ◢'],['закруглённый ◤'],['закруглённый ◥']],DI=t=>{const c=t.charCodeAt(1);return c>96?c-97:c-39};
+DG.forEach((g,n)=>{const c=String.fromCharCode(97+n),nm=n==20?'закруглённый ◣':g;DEF['q'+c]={n:'Декор '+(n==20?': '+nm:nm),c:'#8888ff'};DEF['Q'+c]={n:'Светящийся декор '+(n==20?': '+nm:nm),c:'#ff88ff'}});
+DX.forEach((d,j)=>{const n=24+j,c=String.fromCharCode(n<26?97+n:39+n);DEF['q'+c]={n:'Декор: '+d[0],c:'#8888ff'};DEF['Q'+c]={n:'Светящийся декор: '+d[0],c:'#ff88ff'}});
+const BW=120,SPK={s:0,S:1,l:2,r:3,eu:0,ed:1,el:2,er:3};
+const spb=(d,X,Y)=>d==0?[X+.3*U,Y,.4*U,.5*U]:d==1?[X+.3*U,Y+.5*U,.4*U,.5*U]:d==2?[X,Y+.3*U,.5*U,.4*U]:[X+.5*U,Y+.3*U,.5*U,.4*U];
+function idx(L){L.bk={};for(const o of L.o){const t=o.t,c=t[0];o.ed=t=='p8'||t=='o8'?1:0;o.K=(t=='b'||t=='B')?1:(t in SPK)?2:(c=='w'||c=='W')?3:(c=='c'||c=='C')?4:0;if(o.K==2)o.sd=SPK[t];if(o.K>2)o.tn=+t[1];o.dc=(c=='q'||c=='Q')?1:0;const a=Math.floor(o.x*U/BW),b=Math.floor((o.x+o.w)*U/BW);for(let k=a;k<=b;k++)(L.bk[k]||(L.bk[k]=[])).push(o)}}
+function trig(p,o){const t=o.t,c=t[0],n=+t.slice(1),s=p.sz*U;
+if(c=='m'){p.m=n;p.ds=0;p.vy=0;p.ground=0;inc('prt');sfx('t')}
+else if(c=='g'){p.g=n?-1:1;inc('grv');sfx('t')}else if(c=='d'){G.mir=n?0:1;inc('dir');sfx('t')}
+else if(c=='z'){const ns=n?1:.5,o0=p.sz*U,o1=ns*U;p.y+=p.ground?(p.g==1?0:o0-o1):(o0-o1)/2;p.sz=ns;inc('sz');sfx('t')}
+else if(c=='u'){if(n&&G.ps.length<2){const q=cl(p);q.hit=new Set(p.hit);q.g=-p.g;q.y=CH-p.y-s;q.vy=-p.vy;G.ps.push(q);inc('dual')}else if(!n)G.ps=[G.ps[0]];sfx('t')}
+else if(c=='t'){if(n==0){const i=G.L.t0.indexOf(o),d=G.L.t1[i];if(d){p.x=d.x*U;p.tr=[];inc('tp')}}sfx('t')}
+else if(c=='v'){G.sp=n;inc('spd');sfx('t')}
+else if(c=='p'){eff(p,n,1.25,o);inc('pad');sfx('p')}else if(c=='o'){eff(p,n,1,o);inc('orb');sfx('o')}else if(c=='a'){p.ds=1;p.ft=n;inc('dsh');sfx('o')}}
+function step(p,h){const f=SPD[G.sp],s=p.sz*U,m=p.m,hd=G.held&&!G.lk,L=G.L;p.px=p.x;p.py=p.y;p.buf-=h;
+for(let b=Math.floor(p.x/BW),e=Math.floor((p.x+s)/BW);b<=e;b++){const A=L.bk[b];if(!A)continue;for(const o of A){if(o.K||o.dc||o.ed||p.hit.has(o))continue;const c=o.t[0],X=o.x*U,Y=o.y*U,q=c=='o'||c=='a'?8:0;
+if(p.x+s>X-q&&p.x<X+o.w*U+q&&p.y+s>Y-q&&p.y<Y+o.h*U+q){if(c=='o'||c=='a'){if(p.buf<=0)continue;p.buf=0}p.hit.add(o);trig(p,o)}}}
+if(p.ds&&!hd){p.ds=0;p.vy=0;if(p.ft){p.g=-p.g;p.ground=0;inc('grv')}}
+const g=p.g,tap=p.buf>0;
+if(p.ds)p.vy=0;else if(m==0||m==5){p.vy-=g*2750*h;if(m==5&&p.rt>0&&hd){p.vy=g*480;p.rt-=h}else p.rt=0;if(hd&&p.ground){p.vy=g*(m==0?600:300);p.ground=0;if(m==5)p.rt=.2;inc('jmp');sfx('j')}}
+else if(m==1){p.vy+=g*((hd?1500:-1300)-(G.pf&&G.kd?900:0))*h;p.vy=Math.max(-380,Math.min(380,p.vy))}
+else if(m==2){p.vy-=g*2200*h;if(tap&&p.ground){p.g=-g;p.ground=0;p.buf=0;inc('grv');sfx('j')}}
+else if(m==3){p.vy-=g*1500*h;if(tap){p.vy=g*380;p.buf=0;inc('jmp');sfx('j')}}
+else if(m==4)p.vy=(hd?1:G.pf?(G.kd?-1:0):-1)*g*310*f;
+else if(m==6){p.vy-=g*2750*h;if(tap&&p.ground){p.g=-g;p.vy=-p.g*3500;p.ground=0;p.buf=0;inc('grv');sfx('j')}}
+else{p.vy-=g*1400*h;if(tap){p.g=-g;p.buf=0;inc('grv');sfx('j')}p.vy=Math.max(-450,Math.min(450,p.vy))}
+p.x+=(G.pf?(G.kr-G.kl)*(G.mir?-1:1):p.dir)*310*f*h;if(G.pf&&p.x<0)p.x=0;p.y+=p.vy*h;p.ground=0;
+if(p.y<0){p.y=0;if(p.vy<0)p.vy=0;if(p.g==1)p.ground=1}
+if(p.y+s>CH){p.y=CH-s;if(p.vy>0)p.vy=0;if(p.g==-1)p.ground=1}
+for(let b=Math.floor(p.x/BW),e=Math.floor((p.x+s)/BW);b<=e;b++){const A=L.bk[b];if(!A)continue;for(const o of A){const K=o.K;if(!K)continue;const X=o.x*U,Y=o.y*U;
+if(K==1){const W=o.w*U,Hh=o.h*U;if(p.x<X+W&&p.x+s>X&&p.y<Y+Hh&&p.y+s>Y){if(p.py>=Y+Hh-1.5){p.y=Y+Hh;if(p.vy<0)p.vy=0;if(p.g==1)p.ground=1}else if(p.py+s<=Y+1.5){p.y=Y-s;if(p.vy>0)p.vy=0;if(p.g==-1)p.ground=1}else {if(G.pf){p.x=p.px;continue}return die(p,'b')}}}
+else if(K==2){const[hx,hy,hw,hh]=spb(o.sd,X,Y);if(p.x+s-4>hx&&p.x+4<hx+hw&&p.y+s-4>hy&&p.y+4<hy+hh)return die(p,'s')}
+else{const n=o.tn,F=a=>o.K==4?Math.sqrt(Math.max(0,U*U-a*a)):U-a;if(p.x>=X+U||p.x+s<=X)continue;const l0=Math.max(p.x-X,0),l1=Math.min(p.x+s-X,U),tol=8+Math.abs(p.vy)*h;
+if(n<2){const sf=Y+(n==0?F(l0):F(U-l1));if(p.y<sf&&p.y+s>Y){if(sf-p.y<=tol||p.py>=sf-1.5){p.y=sf;if(p.vy<0)p.vy=0;if(p.g==1)p.ground=1}else {if(G.pf){p.x=p.px;continue}return die(p,'b')}}}
+else{const sf=Y+U-(n==2?F(l0):F(U-l1));if(p.y+s>sf&&p.y<Y+U){if(p.y+s-sf<=tol||p.py+s<=sf+1.5){p.y=sf-s;if(p.vy>0)p.vy=0;if(p.g==-1)p.ground=1}else {if(G.pf){p.x=p.px;continue}return die(p,'b')}}}}}}
+if(m==0&&!p.ground)p.rot-=p.dir*p.g*430*h;else if(m==0)p.rot=Math.round(p.rot/90)*90}
+function update(dt){if(!G.held)G.lk=0;const h=1/240;G.t+=dt;inc('tm',dt);if(G.pf){inc('pft',dt);if(G.kl)inc('lk',dt);if(G.kr)inc('rk',dt);if(G.kd)inc('dk',dt)}inc('t'+G.ps[0].m,dt);if(G.ps[0].ds)inc('dtm',dt);G.acc+=dt*set.gs/100;
+while(G.acc>=h&&!G.dead){G.acc-=h;for(const p of[...G.ps]){step(p,h);if(G.dead)break}}
+const p=G.ps[0];if(!G.dead){if(p.dir==1&&p.x>=0){G.pct=Math.min(100,p.x/(G.L.end*U)*100);G.mx=Math.max(G.mx,G.pct)}
+if(p.dir==1&&p.x>G.L.end*U)win();
+if(set.pr&&set.acp&&G.t-G.lcp>set.ci&&G.ps.every(q=>q.ground))addCp()}}
+function press(){if(G.paused)return;G.held=1;inc('clk');G.ps.forEach(p=>p.buf=set.bf/1000)}
+cv.addEventListener('pointerdown',e=>{e.preventDefault();ac();press()});addEventListener('pointerup',()=>{G.held=0;G.kl=G.kr=G.kd=0});addEventListener('pointercancel',()=>{G.held=0;G.kl=G.kr=G.kd=0});$('#pad').addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b)return;e.preventDefault();ac();const k=b.dataset.k;if(k=='u')press();else G['k'+k]=1});
+const on=id=>$('#t-'+id).classList.contains('on');
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur()});
+function tgl(k){set[k]=+!set[k];sett();sv();ac()}
+function fs(){const s=$('#stage');document.fullscreenElement?document.exitFullscreen():s.requestFullscreen&&s.requestFullscreen()}
+function addCp(){if(!set.pr||G.dead||G.paused||!G.L)return;G.lcp=G.t;G.cps.push({ps:G.ps.map(cl),sp:G.sp,pct:G.pct,mir:G.mir});S.st.mxp=Math.max(S.st.mxp||0,G.cps.length);if(G.cps.length>200)G.cps.shift();inc('prc');sfx('c')}
+function delCp(){if(G.cps.length)G.cps.pop();sfx('c')}
+function togglePr(){set.pr=+!set.pr;G.cps=[];sett();sv();if(G.L&&!G.won&&!G.paused)reset()}
+function trk(d){S.trk=((S.trk||0)+d+TR.length)%TR.length;$('#trk').value=S.trk;sv();ac()}
+function ask(t,f,def){const mi=$('#mdi');$('#mdt').textContent=t;$('#mdn').style.display='';mi.style.display=def===undefined?'none':'';mi.value=def||'';$('#md').style.display='flex';$('#mdy').onclick=()=>{$('#md').style.display='none';f(mi.value)};$('#mdn').onclick=()=>$('#md').style.display='none';mi.onkeydown=e=>{if(e.key=='Enter')$('#mdy').click()};if(def!==undefined)mi.focus()}
+function msg(t){ask(t,()=>{});$('#mdn').style.display='none';$('#mdi').style.display='none'}
+document.addEventListener('change',e=>{const t=e.target;if(t.tagName=='SELECT'||['range','checkbox','color'].includes(t.type))t.blur()});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('keydown',e=>{const tg=e.target.tagName;if($('#md').style.display=='flex'){if(e.code=='Escape'){e.preventDefault();$('#mdn').click()}else if(e.code=='Enter'&&tg!='INPUT'){e.preventDefault();$('#mdy').click()}return}if(tg=='INPUT'||tg=='SELECT'||tg=='TEXTAREA')return;
+const k=e.code,pl=on('play'),ed=on('ed'),ct=e.ctrlKey||e.metaKey;
+if(ct){if(ed&&k=='KeyZ'){e.preventDefault();e.shiftKey?redo():undo()}else if(ed&&k=='KeyY'){e.preventDefault();redo()}else if(k=='KeyS'){e.preventDefault();try{localStorage.setItem('neondash',JSON.stringify(S))}catch(x){}}return}
+if(e.altKey)return;
+if(pl&&G.pf&&G.L&&!G.paused&&!G.won){const m={ArrowLeft:'kl',KeyA:'kl',ArrowRight:'kr',KeyD:'kr',ArrowDown:'kd',KeyS:'kd'}[k];if(m){e.preventDefault();G[m]=1;return}}
+if(pl&&['Space','ArrowUp','KeyW'].includes(k)){e.preventDefault();if(e.repeat)return;ac();if(!G.L)tab('lvl');else if(G.paused&&!G.won&&ov.style.display!='none')resume();else press();return}
+if(ed&&edKey(e))return;if(e.repeat)return;
+const run=pl&&G.L&&!G.paused&&!G.won,pg=pl&&G.L,dg=k.match(/^(?:Digit|Numpad)([1-6])$/);
+if(dg){if(!run)tab(TABS[dg[1]-1][0]);return}
+switch(k){
+case'Escape':case'KeyP':if(pl)pause();break;
+case'Enter':if(pl){if(!G.L)tab('lvl');else if(G.won)start(G.i>=0&&G.i<NL-1?G.i+1:G.i,G.cu,G.ci);else if(G.paused)resume()}break;
+case'KeyR':if(pg){G.paused||G.won?start(G.i,G.cu,G.ci):reset()}break;
+case'KeyT':if(pl)togglePr();break;
+case'KeyZ':if(pg){if(!set.pr)togglePr();addCp()}break;
+case'KeyX':if(pg)delCp();break;
+case'PageUp':case'PageDown':if(pg&&G.i>=0){e.preventDefault();start(Math.max(0,Math.min(NL-1,G.i+(k=='PageDown'?1:-1))))}break;
+case'KeyL':if(!run)tab('lvl');break;case'KeyE':if(!run)tab('ed');break;case'KeyI':if(!run)tab('st');break;case'KeyS':if(!run)tab('se');break;case'KeyA':if(!run)tab('ab');break;
+case'F1':e.preventDefault();tab('ab');break;case'Slash':tab('ab');break;
+case'KeyM':tgl('mus');break;case'KeyN':tgl('sfx');break;case'BracketLeft':trk(-1);break;case'BracketRight':trk(1);break;
+case'KeyF':fs();break;case'KeyH':tgl('hb');break;case'KeyJ':tgl('fps');break;case'KeyK':tgl('pt');break;case'KeyG':tgl('gl');break;case'KeyB':set.bg=(set.bg+1)%30;inc('bgc');sett();sv();break}});
+addEventListener('keyup',e=>{{const m={ArrowLeft:'kl',KeyA:'kl',ArrowRight:'kr',KeyD:'kr',ArrowDown:'kd',KeyS:'kd'}[e.code];if(m)G[m]=0}if(['Space','ArrowUp','KeyW'].includes(e.code))G.held=0});
+addEventListener('blur',()=>{if(set.pa)pause(1)});
+function showPause(){ov.style.display='flex';ov.innerHTML=`<h1>ПАУЗА</h1><p>${G.L.name} · ${G.pct|0}%${set.pr?' · практика, чекпоинтов: '+G.cps.length:''}</p><div><button class="big" onclick="resume()">▶ Продолжить</button> <button class="big" onclick="start(${G.i},${G.cu?1:0},${G.ci})">↻ Заново</button> <button class="big" onclick="tab('lvl')">☰ Уровни</button></div>`}
+function pause(f){if(!G.L||G.won)return;if(f&&G.paused)return;G.paused=!G.paused;if(G.paused){if(on('play'))showPause()}else ov.style.display='none'}
+function resume(){G.paused=0;G.held=0;ov.style.display='none';ac()}
+$('#bp').onclick=()=>pause();$('#br').onclick=()=>G.L&&start(G.i,G.cu,G.ci);$('#bm').onclick=()=>tab('lvl');$('#bpr').onclick=togglePr;$('#bcp').onclick=()=>{if(!set.pr)togglePr();addCp()};$('#bdc').onclick=delCp;$('#bmu').onclick=()=>tgl('mus');$('#bfs').onclick=fs;
+/* ---------- render ---------- */
+function deco(c,s,X,Y,w,h,gw){const cx=X+w/2,cy=Y+h/2,m=Math.min(w,h),r=m/2-3,a=m*.18;c.beginPath();
+switch(s){case 0:c.rect(X+3,Y+3,w-6,h-6);break;case 1:c.rect(X+8,Y+8,w-16,h-16);break;case 2:c.arc(cx,cy,r,0,7);break;case 3:c.moveTo(cx,Y+3);c.lineTo(X+w-3,cy);c.lineTo(cx,Y+h-3);c.lineTo(X+3,cy);c.closePath();break;
+case 4:c.rect(cx-a,Y+3,2*a,h-6);c.rect(X+3,cy-a,w-6,2*a);break;case 5:for(let i=0;i<10;i++){const q=i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;c[i?'lineTo':'moveTo'](cx+Math.cos(q)*rr,cy+Math.sin(q)*rr)}c.closePath();break;
+case 6:c.moveTo(X+3,Y+3);c.lineTo(X+w-3,Y+3);c.lineTo(cx,Y+h-3);c.closePath();break;case 7:c.rect(X+3,cy-4,w-6,8);break;case 8:c.rect(cx-4,Y+3,8,h-6);break;
+case 9:for(const[i,j]of[[.28,.28],[.72,.28],[.28,.72],[.72,.72]]){c.moveTo(X+w*i+4,Y+h*j);c.arc(X+w*i,Y+h*j,4,0,7)}break;case 10:for(let i=0;i<6;i++){const q=i*Math.PI/3;c[i?'lineTo':'moveTo'](cx+Math.cos(q)*r,cy+Math.sin(q)*r)}c.closePath();break;
+case 11:c.arc(cx,cy,r,0,7);c.moveTo(cx+r*.55,cy);c.arc(cx,cy,r*.55,0,7);break;case 12:c.moveTo(X+3,Y+3);c.lineTo(X+w-3,cy);c.lineTo(X+3,Y+h-3);c.closePath();break;
+case 13:c.moveTo(X+3,Y+h-3);c.lineTo(cx,cy);c.lineTo(X+w-3,Y+h-3);c.moveTo(X+3,cy);c.lineTo(cx,Y+3);c.lineTo(X+w-3,cy);break;case 14:c.rect(X+3,Y+3,w/2-3,h/2-3);c.rect(cx,cy,w/2-3,h/2-3);break;
+case 15:for(let i=0;i<3;i++){c.moveTo(X+3,Y+h*(.2+i*.3));c.lineTo(X+w-3,Y+h*(.2+i*.3))}break;case 16:c.rect(X+3,Y+3,w-6,h/2-3);break;case 17:c.rect(X+3,cy,w-6,h/2-3);break;
+case 18:c.rect(X+3,Y+3,w/2-3,h-6);break;case 19:c.rect(cx,Y+3,w/2-3,h-6);break;case 20:c.moveTo(X+3,Y+3);c.arc(X+3,Y+3,m-6,0,Math.PI/2);c.closePath();break;
+case 24:c.moveTo(X+3,Y+h-3);c.lineTo(X+w-3,Y+h-3);c.lineTo(cx,Y+3);c.closePath();break;case 25:c.moveTo(X+w-3,Y+3);c.lineTo(X+w-3,Y+h-3);c.lineTo(X+3,cy);c.closePath();break;
+case 26:c.moveTo(X+3,Y+3);c.lineTo(X+w-3,Y+3);c.lineTo(X+3,Y+h-3);c.closePath();break;case 27:c.moveTo(X+3,Y+3);c.lineTo(X+w-3,Y+3);c.lineTo(X+w-3,Y+h-3);c.closePath();break;
+case 28:c.moveTo(X+3,Y+3);c.lineTo(X+3,Y+h-3);c.lineTo(X+w-3,Y+h-3);c.closePath();break;case 29:c.moveTo(X+3,Y+h-3);c.lineTo(X+w-3,Y+h-3);c.lineTo(X+w-3,Y+3);c.closePath();break;
+case 30:c.moveTo(X+w-3,Y+3);c.arc(X+w-3,Y+3,m-6,Math.PI/2,Math.PI);c.closePath();break;case 31:c.moveTo(X+3,Y+h-3);c.arc(X+3,Y+h-3,m-6,-Math.PI/2,0);c.closePath();break;case 32:c.moveTo(X+w-3,Y+h-3);c.arc(X+w-3,Y+h-3,m-6,Math.PI,1.5*Math.PI);c.closePath();break;
+case 21:c.rect(X+3,Y+3,w-6,h-6);c.rect(X+10,Y+10,w-20,h-20);break;case 22:for(let i=0;i<=6;i++)c[i?'lineTo':'moveTo'](X+3+i*(w-6)/6,i%2?Y+h*.3:Y+h*.7);break;default:c.rect(X+3,Y+3,w-6,h-6);c.rect(X+10,Y+10,w-20,h-20);c.moveTo(cx+3,cy);c.arc(cx,cy,3,0,7)}
+c.globalAlpha=gw?.55:.3;c.fill('evenodd');c.globalAlpha=1;c.stroke();if(gw){c.shadowBlur=0;c.strokeStyle='#fff';c.lineWidth=1;c.stroke()}}
+function bgd(c,W,H,sc,vw,cam,MF,hue){const b=set.bg|0,sh=b%10,v=b/10|0,n=7+v*6,sp=.2+.12*v+(sh%4)*.03,gp=vw/n*1.4;c.strokeStyle=c.fillStyle=set.pu?set.bc:`hsl(${hue+120},100%,60%)`;c.lineWidth=2;c.globalAlpha=.2;
+for(let k=0;k<n;k++){const x=(((k*gp-cam*sp*MF)%(vw+gp))+vw+gp)%(vw+gp)*sc,y=H*(((k*37+sh*11)%10)/12+.08),s=(18+(k*13)%30+v*8)*sc;c.beginPath();
+switch(sh){case 0:c.fillRect(x,H*.2,s,H);break;case 1:c.moveTo(x,0);c.lineTo(x,H);c.stroke();break;case 2:c.arc(x,y,s,0,7);c.stroke();break;case 3:c.strokeRect(x,y,s,s);break;case 4:c.moveTo(x,y+s);c.lineTo(x+s,y+s);c.lineTo(x+s/2,y);c.closePath();c.stroke();break;case 5:c.arc(x,y,s/6,0,7);c.fill();break;case 6:c.moveTo(x,y-s);c.lineTo(x+s,y);c.lineTo(x,y+s);c.lineTo(x-s,y);c.closePath();c.stroke();break;case 7:for(let j=0;j<=20;j++)c.lineTo(x+j*s/5,y+Math.sin(j+cam/80)*s/3);c.stroke();break;case 8:c.moveTo(x,0);c.lineTo(x+s*3,H);c.stroke();break;default:for(let j=0;j<6;j++){const a=j*1.047;c.lineTo(x+Math.cos(a)*s,y+Math.sin(a)*s)}c.closePath();c.stroke()}}
+c.globalAlpha=1}
+function rend(cv,c,L,cam,ps,ed,z=1,cy=0){const W=cv.width,H=cv.height,sc=H/400*z,vw=W/sc,hue=L.hue,MF=ed?1:1-2*(G.mf||0);
+c.setTransform(1,0,0,1,0,0);c.shadowBlur=0;const gr=c.createLinearGradient(0,0,0,H);gr.addColorStop(0,`hsl(${hue},70%,10%)`);gr.addColorStop(1,`hsl(${hue+60},80%,24%)`);if(set.bu){c.fillStyle=set.bk;c.fillRect(0,0,W,H);const g2=c.createLinearGradient(0,0,0,H);g2.addColorStop(0,'#000c');g2.addColorStop(1,'#0000');c.fillStyle=g2;c.fillRect(0,0,W,H)}else{c.fillStyle=gr;c.fillRect(0,0,W,H)}
+bgd(c,W,H,sc,vw,cam,MF,hue);
+c.setTransform(sc*MF,0,0,-sc,W*(1-MF)/2-cam*sc*MF,H-50*sc+cy*sc);const gl=set.gl?12:0;
+c.fillStyle=set.gf;c.fillRect(cam-vw*3,-3000,vw*7,3000);c.fillRect(cam-vw*3,CH,vw*7,3000);
+c.strokeStyle=set.gu?set.gc:`hsl(${hue+120},100%,60%)`;c.shadowColor=c.strokeStyle;c.shadowBlur=gl;c.lineWidth=3;c.beginPath();c.moveTo(cam-vw*3,0);c.lineTo(cam+vw*4,0);c.moveTo(cam-vw*3,CH);c.lineTo(cam+vw*4,CH);c.stroke();
+if(ed&&set.ed){c.shadowBlur=0;c.strokeStyle='#ffffff18';c.lineWidth=1;c.beginPath();for(let x=Math.floor(cam/U)*U;x<cam+vw+U;x+=U){c.moveTo(x,0);c.lineTo(x,CH)}for(let y=0;y<=CH;y+=U){c.moveTo(cam,y);c.lineTo(cam+vw,y)}c.stroke()}
+if(ed){c.shadowBlur=0;c.strokeStyle='#33ff33';c.lineWidth=2;c.beginPath();c.moveTo(0,0);c.lineTo(0,CH);c.stroke()}
+const T=performance.now()/180,SG=1-Math.abs(MF);
+for(let pass=0;pass<2;pass++)for(const o of L.o){const X=o.x*U,Y=o.y*U,W2=o.w*U,Hh=o.h*U;if(X+W2<cam-60-SG*vw*3||X>cam+vw+60+SG*vw*3)continue;
+const t=o.t,k=t[0],dz=k=='q'||k=='Q';if(dz!=(pass==0))continue;if(dz&&ed&&E.hd)continue;const col=DEF[t].c,gw=k=='B'||k=='W'||k=='C'||k=='e'||k=='Q';c.strokeStyle=col;c.fillStyle=col;c.shadowColor=col;c.shadowBlur=gw?(set.gl?24+10*Math.sin(T+X):0):gl;c.lineWidth=gw?4:3;
+if(k=='b'||k=='B'){c.globalAlpha=gw?.5:.25;c.fillRect(X,Y,W2,Hh);c.globalAlpha=1;c.strokeRect(X+1,Y+1,W2-2,Hh-2);if(gw){c.shadowBlur=0;c.strokeStyle='#fff';c.lineWidth=1.5;c.strokeRect(X+4,Y+4,W2-8,Hh-8)}}
+else if(t in SPK){const d=SPK[t];c.beginPath();if(d==0){c.moveTo(X+2,Y);c.lineTo(X+U-2,Y);c.lineTo(X+U/2,Y+U-2)}else if(d==1){c.moveTo(X+2,Y+U);c.lineTo(X+U-2,Y+U);c.lineTo(X+U/2,Y+2)}else if(d==2){c.moveTo(X+U,Y+2);c.lineTo(X+U,Y+U-2);c.lineTo(X+2,Y+U/2)}else{c.moveTo(X,Y+2);c.lineTo(X,Y+U-2);c.lineTo(X+U-2,Y+U/2)}c.closePath();c.globalAlpha=gw?.7:.4;c.fill();c.globalAlpha=1;c.stroke();if(gw){c.shadowBlur=0;c.strokeStyle='#fff';c.lineWidth=1;c.stroke()}
+if(set.hb){c.shadowBlur=0;c.strokeStyle='#f00';c.lineWidth=1;const[a,b2,w3,h3]=spb(d,X,Y);c.strokeRect(a,b2,w3,h3)}}
+else if(k=='w'||k=='W'){const n=+t[1];c.beginPath();if(n==0){c.moveTo(X,Y);c.lineTo(X+U,Y);c.lineTo(X,Y+U)}else if(n==1){c.moveTo(X,Y);c.lineTo(X+U,Y);c.lineTo(X+U,Y+U)}else if(n==2){c.moveTo(X,Y+U);c.lineTo(X+U,Y+U);c.lineTo(X,Y)}else{c.moveTo(X,Y+U);c.lineTo(X+U,Y+U);c.lineTo(X+U,Y)}c.closePath();c.globalAlpha=gw?.55:.25;c.fill();c.globalAlpha=1;c.stroke();if(gw){c.shadowBlur=0;c.strokeStyle='#fff';c.lineWidth=1;c.stroke()}}
+else if(k=='c'||k=='C'){const n=+t[1],sx=n%2,sy=n>>1,a0=[0,Math.PI/2,-Math.PI/2,Math.PI][n],px=X+sx*U,py=Y+sy*U;c.beginPath();c.moveTo(px,py);c.arc(px,py,U,a0,a0+Math.PI/2);c.closePath();c.globalAlpha=gw?.55:.25;c.fill();c.globalAlpha=1;c.stroke();if(gw){c.shadowBlur=0;c.strokeStyle='#fff';c.lineWidth=1;c.stroke()}}
+else if(dz)deco(c,DI(t),X,Y,W2,Hh,gw);
+else if(k=='p'){c.globalAlpha=.6;c.fillRect(X+2,Y,U-4,Hh);c.globalAlpha=1;c.strokeRect(X+2,Y,U-4,Hh)}
+else if(k=='a'){const x=X+U/2,y=Y+U/2;c.beginPath();c.arc(x,y,13,0,7);c.globalAlpha=.3;c.fill();c.globalAlpha=1;c.stroke();c.beginPath();c.moveTo(x-8,y+3);c.lineTo(x,y+3);c.lineTo(x,y+7);c.lineTo(x+9,y);c.lineTo(x,y-7);c.lineTo(x,y-3);c.lineTo(x-8,y-3);c.closePath();c.fill()}
+else if(k=='o'){c.beginPath();c.arc(X+U/2,Y+U/2,11,0,7);c.globalAlpha=.3;c.fill();c.globalAlpha=1;c.stroke();c.beginPath();c.arc(X+U/2,Y+U/2,5,0,7);c.fill()}
+else{const r=Hh/2;c.beginPath();c.ellipse(X+U/2,Y+r,11,r,0,0,7);c.globalAlpha=.18;c.fill();c.globalAlpha=1;c.stroke();c.shadowBlur=0;c.fillStyle='#fff';c.font='bold 22px sans-serif';c.textAlign='center';c.save();c.translate(X+U/2,0);c.scale(MF<0?-1:1,-1);c.fillText(k=='m'?MG[+t[1]]:k=='v'?VG[+t[1]]:GL[t],0,-(Y+r)+8);c.restore()}}
+c.shadowBlur=0;
+if(!ed){if(set.pr)for(const q of G.cps){const p=q.ps[0],s=p.sz*U;c.fillStyle=set.cpc;c.shadowColor=set.cpc;c.shadowBlur=gl;c.save();c.translate(p.x+s/2,p.y+s/2);c.rotate(.785);c.fillRect(-7,-7,14,14);c.restore()}c.shadowBlur=0;for(const q of G.prt){c.fillStyle=q.c;c.globalAlpha=Math.max(0,q.l);c.fillRect(q.x,q.y,5,5)}c.globalAlpha=1;
+ps.forEach(p=>{if(set.tr&&p.tr.length>1){c.strokeStyle=set.tc;c.lineWidth=p.sz*U*.4;c.globalAlpha=.5;c.beginPath();p.tr.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.stroke();c.globalAlpha=1}
+if(G.dead)return;const s=p.sz*U,R=s/2;c.save();c.translate(p.x+R,p.y+R);c.scale(p.dir,1);let a=p.rot*Math.PI/180;const m=p.m;if(m==1||m==3||m==4)a=Math.atan2(p.vy,310*SPD[G.sp])*(m==3?.3:.9);c.rotate(a);if(p.g<0&&m!=0)c.scale(1,-1);
+c.fillStyle=set.cc;c.strokeStyle=set.oc;c.lineWidth=2;c.shadowColor=set.cc;c.shadowBlur=gl;
+if(m==0||m==5){c.fillRect(-R,-R,s,s);c.strokeRect(-R,-R,s,s);c.fillStyle='#000a';c.fillRect(-R*.55,-R*.5,R*1.1,R*.9);c.fillStyle='#fff';c.fillRect(-R*.35,-R*.1,R*.25,R*.25);c.fillRect(R*.15,-R*.1,R*.25,R*.25);if(m==5)c.fillRect(-R,R*.2,s,R*.2)}
+else if(m==1){c.beginPath();c.moveTo(R*1.3,0);c.lineTo(-R,R*.8);c.lineTo(-R,-R*.8);c.closePath();c.fill();c.stroke();c.fillStyle='#fff';c.fillRect(-R*.2,R*.1,R*.7,R*.6)}
+else if(m==2){c.beginPath();c.arc(0,0,R,0,7);c.fill();c.stroke();c.beginPath();c.moveTo(-R,0);c.lineTo(R,0);c.moveTo(0,-R);c.lineTo(0,R);c.stroke()}
+else if(m==3){c.beginPath();c.arc(0,0,R*.6,Math.PI,0);c.fill();c.beginPath();c.ellipse(0,-R*.3,R*1.2,R*.4,0,0,7);c.fillStyle='#ffaa00';c.fill();c.stroke()}
+else if(m==4){c.beginPath();c.moveTo(R,0);c.lineTo(-R,R*.9);c.lineTo(-R*.4,0);c.lineTo(-R,-R*.9);c.closePath();c.fill();c.stroke()}
+else if(m==6){c.beginPath();c.arc(0,0,R*.7,0,7);c.fill();c.stroke();c.beginPath();for(let k=-1;k<=1;k+=2)for(let j=0;j<3;j++){c.moveTo(0,0);c.lineTo(k*R*1.1,-R+j*R*.9)}c.stroke()}
+else{c.fillRect(-R,-R*.6,s,R*1.2);c.strokeRect(-R,-R*.6,s,R*1.2);c.beginPath();c.moveTo(-R*1.2,R*.9);c.lineTo(R*1.2,R*.9);c.stroke()}
+c.restore();if(set.hb){c.strokeStyle='#0f0';c.strokeRect(p.x,p.y,s,s)}})}
+c.setTransform(1,0,0,1,0,0)}
+function hud(c,W,H){c.shadowBlur=0;c.fillStyle=set.hc;c.font=`bold ${H*.045}px sans-serif`;c.textAlign='center';
+if(set.pc)c.fillText((G.pct|0)+'%',W/2,H*.07);if(set.pb){c.fillStyle='#0008';c.fillRect(W*.25,H*.1,W*.5,H*.018);c.fillStyle=set.pbc;c.fillRect(W*.25,H*.1,W*.5*G.pct/100,H*.018)}
+c.textAlign='left';c.fillStyle=set.hc;c.font=`${H*.035}px sans-serif`;if(set.at)c.fillText('Попытка '+G.att,W*.02,H*.06);if(set.pr){c.fillStyle=set.cpc;c.textAlign='right';c.fillText('ПРАКТИКА · чекпоинтов '+G.cps.length,W*.98,H*.06);c.textAlign='left';c.fillStyle=set.hc}if(set.fps)c.fillText(G.fps+' FPS',W*.02,H*.11);if(set.hm&&G.ps[0]){c.textAlign='left';c.fillStyle=set.hc;c.fillText(MN[G.ps[0].m]+' · '+SN[G.sp]+(G.ps.length>1?' · ×2':''),W*.02,H*(set.fps?.16:.11))}
+if(G.flash>0){c.fillStyle=`rgba(255,255,255,${G.flash*.5})`;c.fillRect(0,0,W,H)}}
+function fit(cv){const d=Math.min(devicePixelRatio||1,set.dpr),w=Math.round(cv.clientWidth*d),h=Math.round(cv.clientHeight*d);if(cv.width!=w||cv.height!=h){cv.width=w;cv.height=h}}
+let last=performance.now(),fc=0,ft=0;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;fc++;ft+=dt;if(ft>=.5){G.fps=Math.round(fc/ft);fc=ft=0}
+const pl=$('#t-play').classList.contains('on'),ed=$('#t-ed').classList.contains('on');$('#pad').style.display=pl&&G.pf&&G.L&&!G.paused&&!G.won?'flex':'none';
+if(pl&&G.L){fit(cv);if(!G.paused){if(G.dead){G.dt-=dt;if(G.dt<=0)reset()}update(dt)}
+if(!G.paused)G.ps.forEach(p=>{p.tr.push({x:p.x+p.sz*U/2,y:p.y+p.sz*U/2});while(p.tr.length>set.tl)p.tr.shift()});
+G.prt.forEach(q=>{q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt});G.prt=G.prt.filter(q=>q.l>0);G.flash=Math.max(0,G.flash-dt*3);G.mf+=Math.sign(G.mir-G.mf)*Math.min(Math.abs(G.mir-G.mf),dt*3);G.shake=Math.max(0,G.shake-dt);
+const p=G.ps[0],sc=cv.height/400,vw=cv.width/sc,tg=p.x-(G.pf?vw*.4:p.dir>0?vw*.28:vw*.72);G.cam+=(tg-G.cam)*(1-set.cs/110);
+const sh=G.shake>0?(Math.random()-.5)*G.shake*40:0;cx.save();cx.translate(sh,sh);rend(cv,cx,G.L,G.cam,G.ps,0);cx.restore();hud(cx,cv.width,cv.height);
+$('#info').textContent=G.L.name}
+else if(pl){fit(cv);rend(cv,cx,{o:[],hue:290,end:0},performance.now()/8,[],0)}
+if(ed){fit(ec);syncSB();rend(ec,ecx,custLevel(),E.cam,[],1,E.z,E.cy)}
+requestAnimationFrame(loop)}
+/* ---------- UI ---------- */
+const TABS=[['play','▶ Играть'],['lvl','☰ Уровни'],['ed','🔨 Редактор'],['st','📊 Статистика'],['se','⚙ Настройки'],['ab','📖 О игре']];
+$('#nav').innerHTML=TABS.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
+function tab(id){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id=='t-'+id));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==id));if(id!='play'&&!G.paused)pause(1);if(id=='st')stats();if(id=='lvl')levels();if(id=='play'){if(!G.L)menu();else if(G.paused&&!G.won)showPause()}if(id=='ed')pal();sfx('c');ac();scrollTo(0,0)}
+$('#nav').onclick=e=>e.target.dataset.t&&tab(e.target.dataset.t);
+function menu(){ov.style.display='flex';ov.innerHTML=`<h1>NEON DASH</h1><p>Прыгай, лети, переворачивай гравитацию — и не касайся шипов!</p><div><button class="big" onclick="tab('lvl')">▶ ИГРАТЬ</button> <button class="big" onclick="tab('ed')">🔨 СОЗДАТЬ</button> <button class="big" onclick="tab('se')">⚙</button></div>`}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function levels(){let h='',h2='';for(let i=0;i<NL;i++){const L=gen(i),b=S.best[i]||0;const h_=`<div class="card" style="--h:hsl(${L.hue},100%,60%)" onclick="start(${i})"><b>${i+1}. ${L.name}</b><small>${S.done[i]?'✅ ':''}${DN[L.df]}</small><div>${L.md.map(m=>`<span class="tag" style="color:${MC[m]}">${MN[m]}</span>`).join('')}</div><div class="pr"><i style="width:${b}%"></i></div><small>${b}%</small></div>`;if(i<40)h+=h_;else h2+=h_}$('#lg').innerHTML=h;$('#lp').innerHTML=h2;
+$('#mg').innerHTML=S.lvs.map((l,i)=>`<div class="card" style="--h:hsl(${(i*53+280)%360},100%,60%)"><b>${i+1}. ${esc(l.name)}</b><small>${l.o.length} объектов${l.pf?' · платформер':''} · лучший ${l.best|0}%</small><div class="pr"><i style="width:${l.best|0}%"></i></div><div style="margin-top:.5rem;display:flex;gap:.4rem"><button data-a="p" data-i="${i}">▶ Играть</button><button data-a="e" data-i="${i}">✎ Править</button></div></div>`).join('')}
+$('#mg').onclick=e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;S.ci=i;sv();if(b.dataset.a=='p'&&S.lvs[i].o.length)start(-1,1,i);else{tab('ed');if(b.dataset.a=='p')msg('Уровень пуст: сначала поставьте объекты.')}};
+$('#mnew').onclick=()=>newLevel();
+function stats(){S.st.lv=Object.keys(S.done).filter(k=>k<40).length;S.st.lp=Object.keys(S.done).filter(k=>k>=40).length;$('#st').innerHTML=ST.map(([k,n])=>{let v=S.st[k]||0;if(/^(tm|pft|lk|rk|dk|dtm|t\d)$/.test(k))v=(v/60|0)+' м '+(v%60|0)+' с';else if(k=='best')v=(v|0)+'%';else v=Math.round(v);return`<div><span>${n}</span><b>${v}</b></div>`}).join('')}
+$('#rst').onclick=()=>ask('Сбросить ВСЮ статистику, рекорды и прогресс уровней (в том числе ваших собственных)?',()=>{S.st={};S.best={};S.done={};S.lvs.forEach(l=>{l.best=0});sv();stats();levels()});
+function sett(){$('#se').innerHTML=SD.map(([k,n,t,d,a,b])=>`<label>${n}${t=='c'?`<input type="checkbox" data-k="${k}" ${set[k]?'checked':''}>`:t=='r'?`<span class="sw"><input type="range" data-k="${k}" min="${a}" max="${b}" value="${set[k]}"><b class="rv">${set[k]}</b></span>`:`<input type="color" data-k="${k}" value="${set[k]}">`}</label>`).join('');applySet()}
+$('#se').oninput=e=>{const k=e.target.dataset.k;if(!k)return;const rv=e.target.nextElementSibling;if(rv&&rv.className=='rv')rv.textContent=e.target.value;set[k]=e.target.type=='checkbox'?+e.target.checked:e.target.type=='range'?+e.target.value:e.target.value;if(k=='pr')G.cps=[];if(k=='bg')inc('bgc');if(e.target.type=='color')inc('cch');if(k=='mus'&&set.mus)ac();applySet();sv()};
+function applySet(){vol();const R=document.documentElement.style;R.setProperty('--a',set.ua);R.setProperty('--b',set.ub);R.setProperty('--c',set.uc);R.setProperty('--p',set.up);const CM={b:'xb',B:'xB',s:'xs',S:'xs',l:'xs',r:'xs',eu:'xe',ed:'xe',el:'xe',er:'xe'};for(const k in DEF){const m=CM[k]||(k[0]=='w'||k[0]=='c'?'xw':k[0]=='W'||k[0]=='C'?'xW':k[0]=='q'?'xd':k[0]=='Q'?'xD':0);if(m)DEF[k].c=set[m]}document.querySelectorAll('#pal button').forEach(b=>b.style.setProperty('--k',DEF[b.dataset.k].c));$('#bpr').textContent='🎯 Практика: '+(set.pr?'вкл':'выкл');$('#bmu').textContent='🎵 Музыка: '+(set.mus?'вкл':'выкл');document.documentElement.style.fontSize=set.ui*.16+'px';cv.style.transform=set.mi?'scaleX(-1)':''}
+$('#rse').onclick=()=>ask('Сбросить все '+SD.length+' настроек к значениям по умолчанию?',()=>{SD.forEach(d=>set[d[0]]=d[3]);G.cps=[];sett();sv()});
+$('#trk').innerHTML=TR.map((t,i)=>`<option value="${i}">${t.n}</option>`).join('');$('#trk').value=S.trk||0;$('#trk').onchange=e=>{S.trk=+e.target.value;ac();sv()};
+/* editor */
+const cur=()=>S.lvs[S.ci],ec=$('#ec'),ecx=ec.getContext('2d'),E={cam:-60,cy:0,z:1,sel:'b',era:0,pan:0},H1=[],H2=[];let lock=0,dr=0,pn=null;
+const lvEnd=()=>Math.max(30,...cur().o.map(o=>o.x+o.w))*U,vwE=()=>ec.width/ec.height*400/E.z;
+const PG=[['Реальные блоки',k=>/^(b|B|s|S|l|r|eu|ed|el|er|[wWcC]\d)$/.test(k)],['Блоки декора',k=>/^[qQ]/.test(k)],['Орбы, джамппады и дэши',k=>/^[poa]\d$/.test(k)],['Скорости и порталы',k=>/^[vmgdzut]\d$/.test(k)]],PK=[];
+$('#pal').innerHTML=PG.map(([h,f])=>{const ks=Object.keys(DEF).filter(f);if(h[0]=='О')ks.sort((a,b)=>'poa'.indexOf(a[0])-'poa'.indexOf(b[0])||a[1]-b[1]);PK.push(...ks);return`<div class="pg"><h4>${h} (${ks.length})</h4><div class="pb">`+ks.map(k=>`<button data-k="${k}" title="${DEF[k].n}" style="--k:${DEF[k].c}">${DEF[k].n.replace('Портал: ','⬭ ').replace('Джамппад ','⬆ ').replace('Дэш-орб ','➤ ').replace('Орб ','◉ ').replace('Скорость ','» ')}</button>`).join('')+'</div></div>'}).join('');
+$('#pal').addEventListener('wheel',e=>{const p=e.currentTarget,d=e.deltaX||e.deltaY;if(d<0?p.scrollLeft>0:p.scrollLeft<p.scrollWidth-p.clientWidth-1){e.preventDefault();p.scrollLeft+=d}},{passive:false});
+$('#pal').onclick=e=>{const k=e.target.dataset.k;if(!k)return;E.sel=k;E.era=0;pal()};
+function lvlOpts(){$('#elv').innerHTML=S.lvs.map((l,i)=>`<option value="${i}">${i+1}. ${esc(l.name)} (${l.o.length})${l.pf?' [платформер]':''}</option>`).join('');$('#elv').value=S.ci;$('#epf').value=cur().pf|0}
+function pal(){$('#ebn').textContent='Фон '+((set.bg|0)+1)+'/30';$('#ehd').textContent='👁 Декор: '+(E.hd?'скрыт':'виден');document.querySelectorAll('#pal button').forEach(b=>b.classList.toggle('on',b.dataset.k==E.sel&&!E.era));$('#eera').classList.toggle('on',!!E.era);$('#epan').classList.toggle('on',!!E.pan);$('#ecnt').textContent='Объектов: '+cur().o.length;lvlOpts()}
+function sel(i){S.ci=(i+S.lvs.length)%S.lvs.length;H1.length=H2.length=0;E.cam=-60;E.cy=0;sv();pal()}
+function newLevel(){ask('Название нового уровня:',v=>{S.lvs.push({name:(v.trim()||'Уровень '+(S.lvs.length+1)).slice(0,30),o:[]});S.ci=S.lvs.length-1;inc('lvn');H1.length=H2.length=0;E.cam=-60;sv();pal();levels()},'Уровень '+(S.lvs.length+1))}
+function renLevel(){ask('Новое название уровня:',v=>{cur().name=(v.trim()||'Без названия').slice(0,30);sv();pal();levels()},cur().name)}
+function dupLevel(){S.lvs.push({name:(cur().name+' (копия)').slice(0,30),o:JSON.parse(JSON.stringify(cur().o)),pf:cur().pf|0});S.ci=S.lvs.length-1;inc('lvn');H1.length=H2.length=0;sv();pal();levels()}
+function delLevel(){ask('Удалить уровень «'+cur().name+'»?',()=>{if(S.lvs.length>1){S.lvs.splice(S.ci,1);S.ci=Math.min(S.ci,S.lvs.length-1)}else{cur().o=[];cur().pf=0;cur().name='Уровень 1'}H1.length=H2.length=0;sv();pal();levels()})}
+const rngX=()=>{const a=-300;return[a,Math.max(a+1,lvEnd()+400-vwE())]},rngY=()=>Math.max(0,400-400/E.z);
+function clampE(){const[a,b]=rngX();E.cam=Math.max(a,Math.min(b,E.cam));E.cy=Math.max(0,Math.min(rngY(),E.cy))}
+function syncSB(){clampE();const hs=$('#hs'),vs=$('#vs'),cw=hs.clientWidth,ch=vs.clientHeight;if(!cw||!ch)return;const[a,b]=rngX(),R=b-a,tw=Math.round(cw*(R+vwE())/vwE());$('#hsi').style.width=tw+'px';
+const sl=Math.round((E.cam-a)/R*(tw-cw));if(Math.abs(hs.scrollLeft-sl)>1){lock=performance.now();hs.scrollLeft=sl}
+const Ry=rngY(),th=Ry>0?Math.round(ch*(Ry+400/E.z)/(400/E.z)):ch;$('#vsi').style.height=th+'px';
+const st=Ry>0?Math.round((1-E.cy/Ry)*(th-ch)):0;if(Math.abs(vs.scrollTop-st)>1){lock=performance.now();vs.scrollTop=st}
+$('#ezl').textContent=Math.round(E.z*100)+'%'}
+$('#hs').onscroll=()=>{if(performance.now()-lock<120)return;const hs=$('#hs'),[a,b]=rngX(),mx=hs.scrollWidth-hs.clientWidth;if(mx>0)E.cam=a+hs.scrollLeft/mx*(b-a)};
+$('#vs').onscroll=()=>{if(performance.now()-lock<120)return;const vs=$('#vs'),Ry=rngY(),mx=vs.scrollHeight-vs.clientHeight;if(mx>0&&Ry>0)E.cy=(1-vs.scrollTop/mx)*Ry};
+function zoom(f,fx=.5){const o=vwE(),wx=E.cam+o*fx;E.z=Math.max(.25,Math.min(3,E.z*f));E.cam=wx-vwE()*fx;clampE();inc('zm')}
+function cell(e){const r=ec.getBoundingClientRect(),k=ec.width/r.width,sc=ec.height/400*E.z,px=(e.clientX-r.left)*k,py=(e.clientY-r.top)*k;return[Math.floor((px/sc+E.cam)/U),Math.floor((ec.height-50*sc+E.cy*sc-py)/sc/U)]}
+function snap(){H1.push(JSON.stringify(cur().o));if(H1.length>60)H1.shift();H2.length=0}
+function undo(){if(!H1.length)return;H2.push(JSON.stringify(cur().o));cur().o=JSON.parse(H1.pop());inc('und');sv();pal()}
+function redo(){if(!H2.length)return;H1.push(JSON.stringify(cur().o));cur().o=JSON.parse(H2.pop());sv();pal()}
+function mk(t,x,y){const c=t[0];if('mgdzutv'.includes(c))return{t,x,y:Math.min(y,8),w:1,h:3};return{t,x,y,w:1,h:c=='p'?.3:1}}
+function put(e,er){const[cx_,cy]=cell(e);if(cy<0||cy>10)return;const o=cur().o,hit=o.findIndex(q=>cx_>=q.x&&cx_<q.x+q.w&&cy>=Math.floor(q.y)&&cy<q.y+q.h);
+if(er||E.era){if(hit>=0){o.splice(hit,1);inc('edl')}}else{const n=mk(E.sel,cx_,cy);if(o.some(q=>q.t==n.t&&q.x==n.x&&q.y==n.y))return;o.push(n);inc('obj');if(n.t[0]=='q'||n.t[0]=='Q')inc('dec')}sv();pal()}
+ec.addEventListener('mousedown',e=>{if(e.button==1)e.preventDefault()});
+ec.addEventListener('pointerdown',e=>{ac();ec.setPointerCapture(e.pointerId);if(e.button==1||E.pan||e.shiftKey){pn={x:e.clientX,y:e.clientY,c:E.cam,cy:E.cy};e.preventDefault();return}dr=e.button==2?2:1;snap();put(e,dr==2);sfx('c')});
+ec.addEventListener('pointermove',e=>{if(pn){const r=ec.getBoundingClientRect(),k=ec.width/r.width,sc=ec.height/400*E.z;E.cam=pn.c-(e.clientX-pn.x)*k/sc;E.cy=pn.cy+(e.clientY-pn.y)*k/sc;clampE()}else if(dr)put(e,dr==2)});
+addEventListener('pointerup',()=>{dr=0;pn=null});ec.addEventListener('contextmenu',e=>e.preventDefault());
+ec.addEventListener('wheel',e=>{e.preventDefault();if(e.ctrlKey||e.metaKey){const r=ec.getBoundingClientRect();zoom(e.deltaY<0?1.15:1/1.15,(e.clientX-r.left)/r.width)}else if(e.altKey)E.cy-=e.deltaY/E.z;else E.cam+=(e.deltaX||e.deltaY)/E.z;clampE()},{passive:false});
+function edKey(e){const k=e.code,st=(e.shiftKey?600:150)/E.z;let h=1;
+if(k=='ArrowRight')E.cam+=st;else if(k=='ArrowLeft')E.cam-=st;else if(k=='ArrowUp')E.cy+=st/2;else if(k=='ArrowDown')E.cy-=st/2;
+else if(k=='Home')E.cam=-60;else if(k=='End')E.cam=lvEnd()-vwE()+300;else if(k=='PageDown')E.cam+=vwE()*.9;else if(k=='PageUp')E.cam-=vwE()*.9;
+else if(k=='Equal'||k=='NumpadAdd')zoom(1.25);else if(k=='Minus'||k=='NumpadSubtract')zoom(.8);else if(k=='Digit0'||k=='Numpad0'){E.z=1;E.cy=0}
+else if(k=='KeyF')$('#ezf').click();else if(k=='KeyE')$('#eera').click();else if(k=='KeyT')$('#etest').click();else if(k=='KeyG'){set.ed=+!set.ed;sett();sv()}else if(k=='KeyV')$('#epan').click();else if(k=='Delete')$('#eclr').click();
+else if(k=='BracketLeft')sel(S.ci-1);else if(k=='BracketRight')sel(S.ci+1);else if(k=='KeyN')newLevel();else if(k=='KeyD')dupLevel();
+else if(k=='KeyB')bgGo(e.shiftKey?-1:1);else if(k=='KeyH')$('#ehd').click();else if(k=='KeyQ'||k=='KeyW'){const ks=Object.keys(DEF).filter(x=>x[0]=='q'||x[0]=='Q'),i=ks.indexOf(E.sel);E.sel=ks[i<0?0:(i+(k=='KeyW'?1:ks.length-1))%ks.length];E.era=0;pal()}else if(k=='Comma'||k=='Period'){const ks=PK,i=ks.indexOf(E.sel);E.sel=ks[(i+(k=='Period'?1:ks.length-1))%ks.length];E.era=0;pal();const a=$('#pal button.on');a&&a.scrollIntoView({block:'nearest',inline:'nearest'})}else h=0;
+if(h){e.preventDefault();clampE()}return h}
+$('#etest').onclick=()=>cur().o.length?start(-1,1,S.ci):msg('Сначала поставьте объекты!');
+$('#eclr').onclick=()=>cur().o.length?ask('Полностью очистить этот уровень? (можно отменить Ctrl+Z)',()=>{snap();cur().o=[];sv();pal()}):msg('Уровень уже пуст.');
+$('#eex').onclick=()=>{snap();const a=[];for(let i=0;i<8;i++)a.push({t:'s',x:12+i*8,y:0,w:1,h:1});a.push({t:'p0',x:78,y:0,w:1,h:.3},{t:'o0',x:90,y:1,w:1,h:1},{t:'m1',x:100,y:0,w:1,h:3},{t:'v3',x:106,y:0,w:1,h:3},{t:'m0',x:140,y:0,w:1,h:3});cur().o=a;sv();pal()};
+$('#eund').onclick=undo;$('#ered').onclick=redo;$('#eera').onclick=()=>{E.era=!E.era;pal()};$('#epan').onclick=()=>{E.pan=!E.pan;pal()};
+$('#ezi').onclick=()=>zoom(1.25);$('#ezo').onclick=()=>zoom(.8);$('#ezr').onclick=()=>{E.z=1;E.cy=0;clampE()};$('#ezf').onclick=()=>{E.z=Math.max(.25,Math.min(3,ec.width/ec.height*400/(lvEnd()+300)));E.cam=-100;E.cy=0;clampE()};
+const bgGo=d=>{set.bg=((set.bg|0)+d+30)%30;inc('bgc');sett();sv();pal()};$('#ebp').onclick=()=>bgGo(-1);$('#ebx').onclick=()=>bgGo(1);$('#ehd').onclick=()=>{E.hd=!E.hd;pal()};$('#enew').onclick=newLevel;$('#eren').onclick=renLevel;$('#edup').onclick=dupLevel;$('#edel').onclick=delLevel;$('#elv').onchange=e=>sel(+e.target.value);$('#epf').onchange=e=>{cur().pf=+e.target.value;if(cur().pf)inc('pfn');sv();pal();levels()};
+/* about */
+const DOC=[
+['Что такое Neon Dash','Neon Dash — неоновая 2D-игра в духе Geometry Dash, которая целиком работает в одном HTML-файле и не требует интернета. Иконка сама бежит вперёд, а вы управляете только одной кнопкой: вовремя нажимаете и отпускаете её, чтобы перепрыгивать шипы, пролетать коридоры и менять гравитацию. Внутри 30 уровней по нарастающей сложности, 8 режимов движения, десятки типов порталов, падов и орбов, редактор с неограниченным числом ваших уровней, подробная статистика и 30 настроек. Звук и музыка синтезируются прямо в браузере, а весь прогресс хранится локально на вашем устройстве.'],
+['Цель игры и советы','На каждом уровне нужно добежать до конца, то есть набрать 100%. Любое касание шипа или удар о блок сбоку приводит к мгновенному возвращению в начало. Для каждого уровня запоминается лучший процент, а пройденные уровни помечаются галочкой. Новые режимы, скорости и препятствия появляются постепенно, поэтому первые уровни служат обучением, а последние требуют точности. Начинайте с лёгких уровней, осваивайте режимы по очереди и запоминайте ритм: большинство препятствий повторяются. Если уровень сложен, включите практику клавишей T, ставьте чекпоинты клавишей Z и убирайте их клавишей X, но в конце обязательно пройдите уровень целиком, ведь в практике победа не засчитывается. Помогут также снижение скорости игры, показ хитбоксов и тренировка на своём уровне в редакторе.'],
+['Управление','Единственное игровое действие выполняют клавиши Пробел, стрелка вверх и W, а также клик мышью и касание экрана. В режимах куба, корабля, волны и робота кнопку нужно удерживать, в остальных режимах и для орбов достаточно короткого нажатия. Esc или P ставят игру на паузу, R мгновенно перезапускает попытку. Настройка «Буфер клика» запоминает нажатие на доли секунды, поэтому слегка ранний клик тоже сработает. Полный список горячих клавиш приведён внизу этой страницы.'],
+['Режим «Куб»','Куб — основной режим. Пока кнопка зажата, он прыгает с любой поверхности и сразу прыгает снова после приземления, так что ритмичное удержание позволяет идти по шипам одним движением. Высота прыжка около двух блоков, дальность зависит от текущей скорости. На блоки можно приземляться сверху и бежать по ним, а удар о стену сбоку убивает.'],
+['Режим «Корабль»','Пока кнопка зажата, корабль поднимается, после отпускания плавно снижается. Он умеет скользить по полу и потолку, не погибая, и разбивается только о боковые грани блоков, шипы и скаты на пути. Лучшая тактика — короткие плавные нажатия, а не резкие удержания: так корабль идёт ровно по центру коридора.'],
+['Режим «Шар»','Шар катится по полу или потолку. Нажатие переворачивает гравитацию, но только когда шар касается поверхности: в воздухе клик ждёт приземления в пределах буфера нажатия. Так шар перелетает пропасть между полом и потолком, минуя шипы на каждой из поверхностей.'],
+['Режим «НЛО»','Каждое нажатие даёт НЛО короткий подскок вверх, причём в воздухе, без опоры, сколько угодно раз подряд. Удерживать кнопку бессмысленно: нужно нажимать отдельными ритмичными щелчками.'],
+['Режим «Волна»','Волна движется строго по диагонали: пока кнопка зажата, летит вверх под углом 45°, после отпускания — вниз. Скорость подъёма равна скорости движения вперёд. Волна скользит по полу и потолку, но разбивается о боковые грани блоков, о шипы и о стенки скатов. Чтобы пройти зигзаг, нажимайте и отпускайте кнопку в одном ритме с изгибами коридора; чем уже проход, тем чаще смена.'],
+['Режим «Робот»','Робот похож на куб, но высота прыжка зависит от длительности удержания: короткое нажатие даёт небольшой подскок, а удержание в течение примерно пятой доли секунды поднимает его заметно выше. Это позволяет перепрыгивать препятствия разной высоты, выбирая прыжок под ситуацию. Отпускайте кнопку чуть раньше, если впереди низкая потолочная преграда или тоннель.'],
+['Режим «Паук»','При нажатии паук мгновенно перебрасывается на противоположную поверхность и разворачивает гравитацию. Он не летит по дуге, а почти телепортируется, поэтому такое движение удобно для быстрых смен между шипами на полу и потолке. Нажатие работает только пока паук стоит на поверхности.'],
+['Режим «Свингкоптер»','В свингкоптере каждое нажатие меняет направление гравитации в любой момент, даже в воздухе. Из-за этого аппарат раскачивается между полом и потолком, а амплитуда зависит от того, как часто вы нажимаете. Чтобы удержаться посередине, чередуйте частые лёгкие нажатия, а чтобы пройти шипы на одной из поверхностей, дождитесь, когда свингкоптер окажется у противоположной.'],
+['Порталы','Порталы режимов: зелёный превращает в куб, розовый в корабль, красный в шар, оранжевый в НЛО, голубой в волну, белый в робота, фиолетовый в паука, жёлтый в свингкоптер. Остальные: жёлтый включает антигравитацию, голубой возвращает обычную гравитацию; оранжевый зеркально разворачивает экран (игрок бежит влево, но по-прежнему вперёд), синий возвращает обычный вид; зелёный увеличивает игрока, розовый уменьшает; белый раздваивает, чёрный объединяет; красный телепортирует вперёд к следующему фиолетовому. Все порталы высотой в 3 блока, высота игрока при входе не меняется.'],
+['Скорости','Шесть порталов скорости задают темп уровня: синяя −2 (0,7×), жёлтая −1 (0,85×), голубая 1 (обычная), зелёная 2 (1,25×), розовая 3 (1,55×), красная 4 (1,9×). От скорости зависит не только темп, но и длина прыжка: на высоких скоростях прыгать нужно раньше, а промежутки между шипами длиннее. Настройка «Скорость игры» дополнительно ускоряет или замедляет всё в пределах от 50% до 150%.'],
+['Джамппады','Джамппады срабатывают сами, как только игрок касается их, и нажимать ничего не нужно. Жёлтый даёт средний прыжок, голубой быстро меняет гравитацию, розовый даёт малый прыжок, зелёный постепенно меняет гравитацию, красный даёт большой прыжок, чёрный притягивает вниз без смены гравитации, фиолетовый мгновенно меняет её, белый даёт самый большой прыжок, а синий телепортирует к оранжевому паду, который служит точкой выхода (пары связываются по порядку установки). Пады лежат на поверхности и сильнее соответствующих орбов, поэтому часто стоят в начале сложных участков.'],
+['Орбы','Орбы повторяют десять эффектов падов, но слабее и срабатывают только по клику в момент касания. Они парят в воздухе: чтобы использовать, нужно нажать, пока иконка находится внутри орба. Если не нажать, игрок пролетит мимо без последствий. Чёрные и цветные орбы могут быть обязательными, например, когда нужно перевернуть гравитацию над рядом шипов. Благодаря буферу клика допустимо чуть опередить момент касания. Дэш-орбы в виде стрелки работают на удержание: пока кнопка зажата, иконка летит ровно вперёд на высоте нажатия, а после отпускания падает. Розовый дэш в момент отпускания ещё и меняет гравитацию, зелёный — нет.'],
+['Препятствия','Шипы смертельны при касании. Бывают шипы вверх, вниз, влево и вправо, а также светящиеся варианты всех четырёх. Блоки и светящиеся блоки твёрдые: на них можно приземляться, а удар сбоку убивает. Есть и треугольные блоки в четырёх положениях: они работают как скаты, по которым можно подниматься и спускаться, но вертикальная стенка треугольника опасна так же, как стена блока. Закруглённые треугольники (тоже в четырёх положениях и в светящемся варианте) устроены так же, но гипотенуза у них дуга: по ней плавно съезжают и поднимаются, а крутой участок у стенки опасен как стена. Чтобы изучить опасные места, включите показ хитбоксов.'],
+['Редактор уровней','В редакторе можно создавать сколько угодно уровней: кнопки «Новый», «Имя», «Копия» и «Удалить», а выпадающий список переключает между ними. Все объекты игры доступны в палитре из четырёх групп (блоки, декор, орбы с падами и дэшами, скорости с порталами) с общей полосой прокрутки. Ставьте их кликом, тяните мышью, стирайте правой кнопкой или ластиком. Поле прокручивается колесом и полосами прокрутки, масштаб меняется от 25% до 300%, а кнопка «Весь уровень» показывает уровень целиком. Доступны отмена и возврат действий, а кнопка «Тест» сразу запускает уровень. Всё сохраняется автоматически.'],
+['Статистика','Раздел статистики содержит 40 пунктов: попытки, смерти, прыжки, клики, прохождения, время в игре и в каждом из восьми режимов, пройденные блоки, использованные орбы, пады и порталы, лучший процент, причины смерти, а также данные редактора и режима практики. Статистика обновляется в реальном времени, а кнопка «Сбросить всю статистику» после подтверждения обнуляет и рекорды уровней.'],
+['Настройки и звук','В настройках 30 параметров: громкость музыки и эффектов, скорость игры, хитбоксы, FPS, частицы, след, тряска и вспышка, неоновое свечение, стиль фона, режим практики и её чекпоинты, мгновенный рестарт, буфер клика, неуязвимость, зеркальный экран, цвета иконки и следа, масштаб интерфейса, автопауза, сетка редактора, плавность камеры и качество. В игре шесть музыкальных треков на выбор; музыка и все звуки создаются самим браузером, поэтому работают офлайн.']];
+const HK=[['Пробел / ↑ / W / клик','Действие (прыжок, подъём, переворот)'],['Esc / P','Пауза'],['Пробел / Enter','Продолжить с паузы / следующий уровень'],['R','Быстрый рестарт попытки'],['T','Режим практики вкл/выкл'],['Z','Поставить чекпоинт'],['X','Убрать последний чекпоинт'],['PageUp / PageDown','Предыдущий / следующий уровень'],['1–6','Вкладки'],['L / E / I / S / A','Уровни / Редактор / Статистика / Настройки / О игре'],['M / N','Музыка / эффекты'],['[ / ]','Предыдущий / следующий трек'],['F','Полный экран (в игре)'],['H / J / K / G / B','Хитбоксы / FPS / частицы / свечение / фон'],['F1 или ?','Описание'],['Ctrl+S','Сохранить'],['Ред.: ← → ↑ ↓','Прокрутка (Shift — быстрее)'],['Ред.: Home / End','В начало / в конец уровня'],['Ред.: PageUp / PageDown','Прокрутка страницами'],['Ред.: + / − / 0','Масштаб / сброс масштаба'],['Ред.: F','Показать весь уровень'],['Ред.: E / V','Ластик / режим перетаскивания'],['Ред.: , / .','Предыдущий / следующий объект'],['Ред.: T','Тест уровня'],['Ред.: G','Сетка'],['Ред.: Delete','Очистить уровень'],['Ред.: Ctrl+Z / Ctrl+Y','Отменить / вернуть'],['Ред.: [ / ]','Предыдущий / следующий уровень'],['Ред.: N','Новый уровень'],['Ред.: D','Дублировать уровень']];HK.push(['← → ↑ ↓ / A D W S','Платформер: влево, вправо, действие, вниз'],['Экранные ◀ ▶ ▲ ▼','Платформер на touch-устройствах'],['Ред.: B / Shift+B','Следующий / предыдущий фон в редакторе'],['Ред.: Q / W','Предыдущий / следующий декоративный блок'],['Ред.: H','Скрыть / показать декоративные блоки'],['Esc / Enter в окне','Отмена / подтверждение диалога']);$('#hk').innerHTML=HK.map(h=>`<div><b>${h[0]}</b><span>${h[1]}</span></div>`).join('');
+const dd=n=>DOC.find(d=>d[0]==n);
+DOC[0][1]=DOC[0][1].replace('30 уровней по нарастающей сложности','60 уровней (40 обычных по нарастающей сложности и 20 в режиме платформера)').replace('и 30 настроек','и '+SD.length+' настроек');
+dd('Статистика')[1]=dd('Статистика')[1].replace('40 пунктов',ST.length+(ST.length%100>10&&ST.length%100<15?' пунктов':ST.length%10==1?' пункт':ST.length%10>1&&ST.length%10<5?' пункта':' пунктов'))+' Для платформера отдельно считаются попытки, смерти, победы, время в режиме и время нажатия каждой кнопки направления; также учитываются изменения цвета и смены фона.';
+dd('Редактор уровней')[1]+=' Фон редактора переключается кнопками ◀ ▶ над полем (или клавишами B и Shift+B). В палитре есть 33 декоративных блока (среди них шипы, прямоугольные и закруглённые треугольники во всех четырёх положениях) и 33 их светящихся версии: они ничего не меняют в игре, рисуются позади препятствий, их можно скрыть кнопкой «Декор» или клавишей H, а цвет задаётся в настройках. Для каждого уровня списком «Режим» выбирается «Обычный» или «Платформер»; в платформере уровень проходится управляемым движением, а в обычном иконка бежит сама.';
+dd('Настройки и звук')[1]=dd('Настройки и звук')[1].replace('30 параметров',SD.length+' параметров')+' Также настраиваются цвета интерфейса, HUD, пола, частиц, контура иконки, блоков, шипов и треугольников (порталы, джамппады, орбы и скорости сохраняют свои цвета), а ещё 30 разных фонов и цвет их узора. Длина следа задаётся ползунком, а в HUD можно показывать текущий режим и скорость.';
+dd('Цель игры и советы')[1]+=' Всего в игре 60 уровней: 40 обычных (последние 10 заметно сложнее остальных) и 20 в режиме платформера.';
+DOC.push(['Режим платформера','В платформере иконка не бежит сама: если вы ничего не нажимаете, она стоит на месте. Влево и вправо двигают клавиши ← → или A D (а также экранные кнопки ◀ ▶), действие — ↑, W, пробел или кнопка ▲, а ▼ или S работает как «вниз» (в волне опускает её, в корабле ускоряет снижение). Работают все режимы, порталы, гравитация, джамппады, орбы, скорости, зеркальный экран (он меняет местами стороны управления), раздвоение и телепорты. Шипы убивают, как и раньше, а блоки и стенки в платформере не убивают, а просто не пускают. Уровни платформера 41–60 идут по нарастающей сложности, а в редакторе можно создавать собственные уровни этого режима.'],['Цвета и фоны','В настройках меняются цвета интерфейса, текста HUD, полосы прогресса, чекпоинтов, частиц смерти, контура иконки, линий и заливки пола, блоков, светящихся блоков, шипов, светящихся шипов и треугольников. Цвета порталов, джамппадов, орбов и скоростей зафиксированы, чтобы их можно было узнать с первого взгляда. Фонов тридцать: десять форм узора (полосы, линии, круги, квадраты, треугольники, точки, ромбы, волны, диагонали, шестиугольники) в трёх вариантах плотности и скорости параллакса. Номер выбирается ползунком или клавишей B, а цвет фона и узора можно задать свой.']);
+DOC.push(['Уровни и сложность','Все 60 уровней создаёт генератор по номеру уровня, поэтому рисунок каждого из них всегда одинаков. На карточке видны название, сложность от «Лёгкого» до «Экстрима» и значки режимов, которые встретятся на пути. С ростом номера появляются новые режимы, порталы, скорости и светящиеся препятствия, а у последних десяти обычных уровней коридоры уже, а промежутки короче. Номера 41–60 отведены под платформер. Полоска на карточке показывает лучший процент, галочка отмечает полное прохождение. Закрытых уровней нет: проходить можно в любом порядке.'],
+['Режим практики','Включается кнопкой «Практика», клавишей T или настройкой. Прогресс уровня в практике не засчитывается, зато доступны чекпоинты: клавиша Z (или кнопка «Чекпоинт») запоминает позицию, режим, скорость, гравитацию и размер иконки, а X (или «Убрать») удаляет последний. После смерти игра возвращает вас к последнему чекпоинту. Если включены авто-чекпоинты, они ставятся сами через выбранный интервал, но только когда иконка стоит на опоре. Ромбики на уровне отмечают сохранённые точки, их цвет задаётся в настройках, а всего хранится до 200 точек.'],
+['Раздвоение и размер','Портал раздвоения создаёт второго игрока, зеркального по вертикали: он появляется с противоположной стороны поля с перевёрнутой гравитацией и повторяет каждое ваше нажатие. Гибель любого из двоих означает проигрыш попытки, а процент считается по первому. Портал объединения оставляет одного игрока. Портал уменьшения вдвое сжимает иконку и позволяет пройти узкие места, а портал увеличения возвращает обычный размер. Хитбокс меняется вместе с размером, поэтому у маленькой иконки проход шире.'],
+['Телепорты и зеркало','Телепорты работают парами: красный портал переносит иконку к фиолетовому, а пары связываются по порядку установки, то есть первый красный с первым фиолетовым и так далее. Высота и вертикальная скорость сохраняются, шлейф сбрасывается; красный портал без пары ничего не делает. Портал «Движение назад» зеркально разворачивает экран: иконка по-прежнему бежит вперёд по уровню, но на экране движется справа налево, а «Движение вперёд» возвращает обычный вид. Это отдельная вещь от настройки «Зеркальный экран», которая отражает весь холст целиком.'],
+['Музыка и звуки','Весь звук синтезируется браузером на лету, без аудиофайлов. Шесть треков — Neon Pulse, Cyber Rush, Laser Night, Plasma Drive, Hyper Storm и Calm Grid — различаются темпом от 100 до 174 ударов в минуту, ладом и мелодией. Трек выбирается списком над полем или клавишами [ и ]. Музыка и эффекты включаются отдельно (M и N) и имеют собственные ползунки громкости. Эффекты есть для прыжка, орба, пада, портала, смерти и победы, а лёгкий щелчок сопровождает интерфейс и чекпоинты. Браузер разрешает звук лишь после первого клика, поэтому вначале музыка может молчать.'],
+['Производительность и качество','Если игра идёт рывками, начните с настройки «Качество (DPR)»: значение 1 рисует холст в обычном разрешении, а 3 — в утроенном. Затем отключите неоновое свечение (G), частицы (K) и след игрока: это самые затратные эффекты. Счётчик FPS включается клавишей J. Тряска экрана и вспышка при смерти влияют только на внешний вид. Физика считается фиксированным шагом в 1/240 секунды независимо от частоты кадров, а при падении ниже 20 кадров в секунду игра просто замедляется, не меняя своих правил.'],
+['Сохранение и прогресс','Всё хранится в localStorage браузера под одним ключом: настройки, статистика, рекорды, пройденные уровни, выбранный трек и все уровни из редактора. Запись выполняется через долю секунды после изменения и при закрытии страницы, а Ctrl+S сохраняет мгновенно. Прогресс привязан к браузеру и адресу страницы, а не к самому файлу, поэтому в другом браузере всё начнётся заново. Сброс статистики стирает рекорды и пройденные уровни, но не трогает ваши уровни и настройки, а кнопка «Сбросить настройки» возвращает значения по умолчанию.'],
+['Дэши и телепорт-объекты','Дэш-орбы — стрелки в круге. Нажмите кнопку внутри орба и держите: иконка полетит строго вперёд на той высоте, где вы нажали, и будет падать только после отпускания. Зелёный дэш гравитацию не меняет, розовый переворачивает её в момент отпускания. Любой пад, орб или портал режима прерывает дэш. Синие пады и орбы начинают телепортацию, оранжевые её заканчивают: вход и выход связываются по порядку установки, а после переноса иконка оказывается на месте выхода с нулевой вертикальной скоростью. Оранжевые объекты сами ничего не делают и не съедают ваш клик, а белые пады и орбы дают самый большой прыжок в игре.'],
+['Мобильные устройства и экран','Игра работает на телефонах и планшетах: касание поля заменяет клик, а на уровнях платформера внизу появляются экранные кнопки ◀ ▶ ▲ ▼. Редактор тоже понимает касания, но для стирания удобнее кнопка «Ластик», а для прокрутки — «Пан» или полосы прокрутки. Кнопка «Экран» (клавиша F) разворачивает поле на весь экран, а масштаб интерфейса от 80% до 130% помогает подогнать размер кнопок. Автопауза ставит игру на паузу, когда окно теряет фокус.']);
+$('#ab').innerHTML=DOC.map((d,i)=>`<article id="d${i}"><h3>${i+1}. ${d[0]}</h3><p>${d[1]}</p></article>`).join('');$('#toc').innerHTML=DOC.map((d,i)=>`<a href="#d${i}">${i+1}. ${d[0]}</a>`).join('');
+sett();pal();levels();menu();tab('play');addEventListener('beforeunload',()=>{try{localStorage.setItem('neondash',JSON.stringify(S))}catch(e){}});
+requestAnimationFrame(loop);
+/*
+ЖУРНАЛ: телепорт-пара — i-й синий объект к i-му оранжевому (G.L.s0/s1 в start()); дэши a0/a1 (p.ds, p.ft),
+пока кнопка зажата физика режима пропущена, a1 после отпускания меняет p.g; палитра редактора — PG/PK.
+Уровни 0-59 строятся gen() по рецептам GR: буква сцены + цифра скорости.
+*/
+</script></body></html>
