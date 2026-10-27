@@ -1,2 +1,2 @@
 # websites
-websites themes: games, mathematics, informatics, physics, programming
+websites themes: neural network, games, mathematics, informatics, physics, and programming.
